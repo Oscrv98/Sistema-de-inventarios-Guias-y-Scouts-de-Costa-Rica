@@ -2,10 +2,11 @@ import tkinter as tk
 import styles
 
 class BaseSystem:
-    def __init__(self, root, return_callback, system_name):
+    def __init__(self, root, return_callback, system_name, db_status="Conectado"):
         self.root = root
         self.return_callback = return_callback
         self.system_name = system_name
+        self.db_status = db_status  # Recibir estado desde main.py
         
         # Obtener color según sistema
         self.system_color = styles.COLOR_TIENDA if system_name.upper() == "TIENDA" else styles.COLOR_RAPE
@@ -25,7 +26,50 @@ class BaseSystem:
         # Crear componentes básicos
         self.create_header()
         self.create_menu_container()
+        self.create_status_bar()  # Barra de estado
     
+    def create_status_bar(self):
+        """Crea barra de estado en la parte inferior"""
+        status_frame = tk.Frame(self.main_frame, 
+                               bg=styles.COLOR_FONDO_OSCURO, 
+                               height=25)
+        status_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        status_frame.pack_propagate(False)
+        
+        # Determinar color según estado
+        if "Conectado" in self.db_status:
+            status_color = styles.COLOR_EXITO  # Verde
+            status_text = "✓ " + self.db_status
+        elif "Conectando" in self.db_status:
+            status_color = styles.COLOR_ADVERTENCIA  # Naranja
+            status_text = self.db_status
+        else:
+            status_color = styles.COLOR_PELIGRO  # Rojo
+            status_text = "✗ " + self.db_status
+        
+        # Indicador de conexión BD (izquierda)
+        self.connection_status = tk.Label(status_frame, 
+                                         text=status_text, 
+                                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO, styles.PESO_NORMAL),
+                                         bg=styles.COLOR_FONDO_OSCURO, 
+                                         fg=status_color)
+        self.connection_status.pack(side=tk.LEFT, padx=(10, 0))
+        
+        # Separador
+        separator = tk.Frame(status_frame, 
+                            bg=styles.COLOR_TEXTO_CLARO, 
+                            width=1, 
+                            height=15)
+        separator.pack(side=tk.LEFT, padx=10)
+        
+        # Nombre del sistema (derecha)
+        system_label = tk.Label(status_frame, 
+                               text=f"Sistema: {self.system_name}", 
+                               font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO, styles.PESO_NORMAL),
+                               bg=styles.COLOR_FONDO_OSCURO, 
+                               fg=styles.COLOR_TEXTO_CLARO)
+        system_label.pack(side=tk.RIGHT, padx=(0, 10))
+        
     def create_header(self):
         """Crea el encabezado común"""
         header_frame = tk.Frame(self.main_frame, 

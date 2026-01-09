@@ -4,8 +4,8 @@ from baseSystem import BaseSystem
 import styles
 
 class RAPESystem(BaseSystem):
-    def __init__(self, root, return_callback):
-        super().__init__(root, return_callback, "RA-PE")
+    def __init__(self, root, return_callback, db_status="Conectado"):
+        super().__init__(root, return_callback, "RA-PE", db_status)
         
         # Configurar botón específico de RA-PE
         self.btn_productos.config(text="MATERIALES RA-PE", command=self.open_materiales_rape)

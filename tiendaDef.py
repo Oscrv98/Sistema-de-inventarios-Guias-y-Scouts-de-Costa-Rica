@@ -4,8 +4,8 @@ from baseSystem import BaseSystem
 import styles
 
 class TiendaSystem(BaseSystem):
-    def __init__(self, root, return_callback):
-        super().__init__(root, return_callback, "TIENDA")
+    def __init__(self, root, return_callback, db_status="Conectado"):
+        super().__init__(root, return_callback, "TIENDA", db_status)
         
         # Configurar botón específico de TIENDA
         self.btn_productos.config(text="PRODUCTOS TIENDA", command=self.open_productos_tienda)
