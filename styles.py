@@ -95,3 +95,13 @@ ANCHO_BOTON_SISTEMA = 15
 ALTO_BOTON_SISTEMA = 3
 ANCHO_BOTON_MENU = 15
 ALTO_BOTON_MENU = 4
+
+# ============================================
+# ESTILOS PARA TREEVIEW
+# ============================================
+
+# Colores para Treeview
+COLOR_TREEVIEW_HEADING = "#46409C"  # Gris claro para encabezados
+COLOR_TREEVIEW_ODD = "#f9f9f9"      # Fondo filas impares  
+COLOR_TREEVIEW_EVEN = "#A7A4A4"     # Fondo filas pares
+COLOR_TREEVIEW_SELECTION = "#d4e6f1"  # Color al seleccionar fila
