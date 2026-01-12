@@ -1,5 +1,5 @@
 """
-Ventana CRUD para gestión de Marcas
+Ventana CRUD para gestión de Categorías
 """
 
 import tkinter as tk
@@ -7,7 +7,7 @@ from tkinter import ttk, messagebox
 import styles
 from db import Database
 
-class VentanaMarca:
+class VentanaCategoria:
     def __init__(self, parent, systemName):
         self.parent = parent
         self.systemName = systemName
@@ -15,7 +15,7 @@ class VentanaMarca:
         
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
-        self.window.title(f"Gestión de Marcas - {systemName}")
+        self.window.title(f"Gestión de Categorías - {systemName}")
         self.window.geometry("1000x700")
         self.window.minsize(1000, 700) 
         self.window.maxsize(1000, 700)  
@@ -28,7 +28,7 @@ class VentanaMarca:
         
         # Crear interfaz
         self.createWidgets()
-        self.loadMarcas()
+        self.loadCategorias()
     
     def centerWindow(self, width, height):
         """Centra la ventana en la pantalla"""
@@ -46,7 +46,7 @@ class VentanaMarca:
         
         # Título
         title = tk.Label(mainFrame, 
-                        text="GESTIÓN DE MARCAS", 
+                        text="GESTIÓN DE CATEGORÍAS", 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
                         bg=styles.COLOR_FONDO, 
                         fg=styles.COLOR_TEXTO_OSCURO)
@@ -56,9 +56,9 @@ class VentanaMarca:
         controlFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         controlFrame.pack(fill=tk.X, pady=(0, 15))
         
-        # Label y Entry para nombre de marca
+        # Label y Entry para nombre de categoría
         tk.Label(controlFrame, 
-                text="Nombre de la marca:", 
+                text="Nombre de la categoría:", 
                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                 bg=styles.COLOR_FONDO, 
                 fg=styles.COLOR_TEXTO_OSCURO).grid(row=0, column=0, padx=(0, 10), sticky="w")
@@ -81,7 +81,7 @@ class VentanaMarca:
                                     bg=styles.COLOR_EXITO, 
                                     fg=styles.COLOR_BLANCO,
                                     width=10,
-                                    command=self.agregarMarca)
+                                    command=self.agregarCategoria)
         self.btnAgregar.pack(side=tk.LEFT, padx=5)
         
         self.btnEditar = tk.Button(buttonFrame, 
@@ -91,7 +91,7 @@ class VentanaMarca:
                                    fg=styles.COLOR_BLANCO,
                                    width=10,
                                    state=tk.DISABLED,
-                                   command=self.editarMarca)
+                                   command=self.editarCategoria)
         self.btnEditar.pack(side=tk.LEFT, padx=5)
         
         self.btnCancelar = tk.Button(buttonFrame, 
@@ -118,13 +118,13 @@ class VentanaMarca:
         
         # Configurar columnas
         self.tree.heading("ID", text="ID")
-        self.tree.heading("Nombre", text="Nombre de la Marca")
+        self.tree.heading("Nombre", text="Nombre de la Categoría")
         self.tree.column("ID", width=100, anchor="center")
         self.tree.column("Nombre", width=700, anchor="center")
 
-        # Configurar estilo para el Treeview (CORRECCIÓN COMPLETA)
+        # Configurar estilo para el Treeview
         style = ttk.Style()
-        style.theme_use('clam')  # Usar tema 'clam' que permite más personalización
+        style.theme_use('clam')
         
         # Configurar estilo global para Treeview
         style.configure("Treeview",
@@ -169,13 +169,13 @@ class VentanaMarca:
         
         # Botón Eliminar
         self.btnEliminar = tk.Button(bottomFrame, 
-                                     text="Eliminar Marca Seleccionada", 
+                                     text="Eliminar Categoría Seleccionada", 
                                      font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                                      bg=styles.COLOR_PELIGRO, 
                                      fg=styles.COLOR_BLANCO,
                                      width=25,
                                      state=tk.DISABLED,
-                                     command=self.eliminarMarca)
+                                     command=self.eliminarCategoria)
         self.btnEliminar.pack(side=tk.LEFT, padx=(0, 20))
         
         # Botón Cerrar
@@ -194,17 +194,17 @@ class VentanaMarca:
         # Variables para control de edición
         self.editingId = None
     
-    def loadMarcas(self):
-        """Carga las marcas desde la base de datos"""
+    def loadCategorias(self):
+        """Carga las categorías desde la base de datos"""
         # Limpiar tabla
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Obtener marcas
-        marcas = self.db.get_all_marcas()
+        # Obtener categorías
+        categorias = self.db.get_all_categorias()
         
-        if marcas:
-            for i, marca in enumerate(marcas):
+        if categorias:
+            for i, categoria in enumerate(categorias):
                 # Determinar tag para fila alternada
                 if i % 2 == 0:
                     tag_actual = 'even'
@@ -213,18 +213,18 @@ class VentanaMarca:
                 
                 # Insertar con tag
                 self.tree.insert("", tk.END, 
-                                values=(marca['id_marca'], marca['nombre_marca']),
+                                values=(categoria['id_categoria'], categoria['nombre_categoria']),
                                 tags=(tag_actual,))
     
     def onTreeSelect(self, event):
-        """Maneja la selección de una marca en el Treeview"""
+        """Maneja la selección de una categoría en el Treeview"""
         selection = self.tree.selection()
         if selection:
             # Habilitar botones de edición y eliminación
             self.btnEditar.config(state=tk.NORMAL)
             self.btnEliminar.config(state=tk.NORMAL)
             
-            # Si no estamos en modo edición, cargar la marca seleccionada en el entry
+            # Si no estamos en modo edición, cargar la categoría seleccionada en el entry
             if not self.editingId:
                 item = self.tree.item(selection[0])
                 self.nombreVar.set(item['values'][1])
@@ -232,27 +232,27 @@ class VentanaMarca:
             self.btnEditar.config(state=tk.DISABLED)
             self.btnEliminar.config(state=tk.DISABLED)
     
-    def agregarMarca(self):
-        """Agrega una nueva marca"""
+    def agregarCategoria(self):
+        """Agrega una nueva categoría"""
         nombre = self.nombreVar.get().strip()
         
         if not nombre:
-            messagebox.showwarning("Campo requerido", "Por favor ingrese un nombre para la marca")
+            messagebox.showwarning("Campo requerido", "Por favor ingrese un nombre para la categoría")
             return
         
         try:
-            marcaId = self.db.create_marca(nombre)
-            if marcaId:
-                messagebox.showinfo("Éxito", f"Marca '{nombre}' creada exitosamente")
+            categoriaId = self.db.create_categoria(nombre)
+            if categoriaId:
+                messagebox.showinfo("Éxito", f"Categoría '{nombre}' creada exitosamente")
                 self.nombreVar.set("")
-                self.loadMarcas()
+                self.loadCategorias()
             else:
-                messagebox.showerror("Error", "No se pudo crear la marca")
+                messagebox.showerror("Error", "No se pudo crear la categoría")
         except Exception as e:
-            messagebox.showerror("Error", f"Error al crear marca: {e}")
+            messagebox.showerror("Error", f"Error al crear categoría: {e}")
     
-    def editarMarca(self):
-        """Inicia modo edición para la marca seleccionada"""
+    def editarCategoria(self):
+        """Inicia modo edición para la categoría seleccionada"""
         selection = self.tree.selection()
         if not selection:
             return
@@ -271,26 +271,26 @@ class VentanaMarca:
         self.nombreEntry.focus()
     
     def guardarEdicion(self):
-        """Guarda los cambios de la marca editada"""
+        """Guarda los cambios de la categoría editada"""
         if not self.editingId:
             return
         
         nombre = self.nombreVar.get().strip()
         
         if not nombre:
-            messagebox.showwarning("Campo requerido", "Por favor ingrese un nombre para la marca")
+            messagebox.showwarning("Campo requerido", "Por favor ingrese un nombre para la categoría")
             return
         
         try:
-            success = self.db.update_marca(self.editingId, nombre)
+            success = self.db.update_categoria(self.editingId, nombre)
             if success:
-                messagebox.showinfo("Éxito", f"Marca actualizada exitosamente")
+                messagebox.showinfo("Éxito", f"Categoría actualizada exitosamente")
                 self.cancelarEdicion()
-                self.loadMarcas()
+                self.loadCategorias()
             else:
-                messagebox.showerror("Error", "No se pudo actualizar la marca")
+                messagebox.showerror("Error", "No se pudo actualizar la categoría")
         except Exception as e:
-            messagebox.showerror("Error", f"Error al actualizar marca: {e}")
+            messagebox.showerror("Error", f"Error al actualizar categoría: {e}")
     
     def cancelarEdicion(self):
         """Cancela el modo edición"""
@@ -299,36 +299,36 @@ class VentanaMarca:
         
         # Restaurar estado de botones
         self.btnAgregar.config(state=tk.NORMAL)
-        self.btnEditar.config(text="Editar", command=self.editarMarca)
+        self.btnEditar.config(text="Editar", command=self.editarCategoria)
         self.btnCancelar.config(state=tk.DISABLED)
         self.btnEliminar.config(state=tk.NORMAL)
         
         # Limpiar selección
         self.tree.selection_remove(self.tree.selection())
     
-    def eliminarMarca(self):
-        """Elimina la marca seleccionada"""
+    def eliminarCategoria(self):
+        """Elimina la categoría seleccionada"""
         selection = self.tree.selection()
         if not selection:
             return
         
         item = self.tree.item(selection[0])
-        marcaId = item['values'][0]
-        marcaNombre = item['values'][1]
+        categoriaId = item['values'][0]
+        categoriaNombre = item['values'][1]
         
         # Confirmar eliminación
         confirm = messagebox.askyesno("Confirmar eliminación", 
-                                     f"¿Está seguro de eliminar la marca '{marcaNombre}'?")
+                                     f"¿Está seguro de eliminar la categoría '{categoriaNombre}'?")
         if not confirm:
             return
         
         try:
-            success, message = self.db.delete_marca(marcaId)
+            success, message = self.db.delete_categoria(categoriaId)
             if success:
                 messagebox.showinfo("Éxito", message)
-                self.loadMarcas()
+                self.loadCategorias()
                 self.nombreVar.set("")
             else:
                 messagebox.showwarning("No se puede eliminar", message)
         except Exception as e:
-            messagebox.showerror("Error", f"Error al eliminar marca: {e}")
+            messagebox.showerror("Error", f"Error al eliminar categoría: {e}")

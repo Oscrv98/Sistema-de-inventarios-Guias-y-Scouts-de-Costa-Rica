@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox  # <-- Esto ya está bien
+from tkinter import messagebox  
 import styles
 
 class BaseSystem:
@@ -198,9 +198,9 @@ class BaseSystem:
             self.inner_frame.grid_rowconfigure(i, weight=1)
         
         # Configurar comandos
-        self.btn_marcas.config(command=self.openMarcasWindow)  # <-- Esto está bien
-        self.btn_categorias.config(command=self.placeholder_func)
-        self.btn_edificios.config(command=self.placeholder_func)
+        self.btn_marcas.config(command=self.openMarcasWindow)  
+        self.btn_categorias.config(command=self.openCategoriasWindow)
+        self.btn_edificios.config(command=self.openEdificiosWindow)
         self.btn_productos.config(command=self.placeholder_func)
         self.btn_excel.config(command=self.placeholder_func)
     
@@ -213,6 +213,23 @@ class BaseSystem:
             print(f"Error al importar ventanaMarca: {e}")
             messagebox.showerror("Error", f"No se pudo abrir gestión de marcas: {e}")
     
+    def openCategoriasWindow(self):
+        """Abre la ventana de gestión de categorías"""
+        try:
+            from ventanaCategoria import VentanaCategoria
+            VentanaCategoria(self.root, self.system_name)
+        except ImportError as e:
+            print(f"Error al importar ventanaCategoria: {e}")
+            messagebox.showerror("Error", f"No se pudo abrir gestión de categorías: {e}")
+    def openEdificiosWindow(self):
+        """Abre la ventana de gestión de edificios"""
+        try:
+            from ventanaEdificio import VentanaEdificio
+            VentanaEdificio(self.root, self.system_name)
+        except ImportError as e:
+            print(f"Error al importar ventanaEdificio: {e}")
+            messagebox.showerror("Error", f"No se pudo abrir gestión de edificios: {e}")
+
     def placeholder_func(self):
         """Función placeholder que luego será reemplazada"""
         print(f"[{self.system_name}] Función no implementada aún")

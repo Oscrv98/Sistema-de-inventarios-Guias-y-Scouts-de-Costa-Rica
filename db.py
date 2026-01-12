@@ -55,7 +55,7 @@ class Database:
     # === MÉTODOS CRUD PARA MARCA ===
     def get_all_marcas(self):
         """Obtener todas las marcas ordenadas por nombre"""
-        query = "SELECT id_marca, nombre_marca FROM marca ORDER BY nombre_marca"
+        query = "SELECT id_marca, nombre_marca FROM marca ORDER BY id_marca, nombre_marca"
         return self.execute_query(query, fetch=True)
     
     def get_marca_by_id(self, id_marca):
@@ -101,6 +101,125 @@ class Database:
             return True, "Marca eliminada exitosamente"
         return False, "Error eliminando marca"
     # FIN MÉTODOS CRUD MARCA
+
+    # === MÉTODOS CRUD PARA CATEGORÍA ===
+    def get_all_categorias(self):
+        """Obtener todas las categorías ordenadas por nombre"""
+        query = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY id_categoria, nombre_categoria"
+        return self.execute_query(query, fetch=True)
+    
+    def get_categoria_by_id(self, id_categoria):
+        """Obtener una categoría por ID"""
+        query = "SELECT id_categoria, nombre_categoria FROM categoria WHERE id_categoria = %s"
+        result = self.execute_query(query, (id_categoria,), fetch=True)
+        return result[0] if result else None
+    
+    def create_categoria(self, nombre_categoria):
+        """Crear nueva categoría"""
+        query = "INSERT INTO categoria (nombre_categoria) VALUES (%s) RETURNING id_categoria"
+        result = self.execute_query(query, (nombre_categoria,), fetch=True)
+        if result and len(result) > 0:
+            return result[0]['id_categoria']
+        return None
+    
+    def update_categoria(self, id_categoria, nombre_categoria):
+        """Actualizar categoría existente"""
+        query = "UPDATE categoria SET nombre_categoria = %s WHERE id_categoria = %s"
+        affected = self.execute_query(query, (nombre_categoria, id_categoria))
+        return affected > 0
+    
+    def delete_categoria(self, id_categoria):
+        """Eliminar categoría si no tiene productos asociados"""
+        # Verificar si la categoría está siendo usada
+        check_query = """
+        SELECT 
+            (SELECT COUNT(*) FROM ProductsTienda WHERE id_categoria = %s) as count_tienda,
+            (SELECT COUNT(*) FROM ProductsRaPe WHERE id_categoria = %s) as count_rape
+        """
+        result = self.execute_query(check_query, (id_categoria, id_categoria), fetch=True)
+        
+        if result:
+            count_tienda = result[0]['count_tienda']
+            count_rape = result[0]['count_rape']
+            
+            if count_tienda > 0 or count_rape > 0:
+                total = count_tienda + count_rape
+                return False, f"No se puede eliminar: La categoría tiene {total} producto(s) asociado(s)"
+        
+        # Eliminar si no tiene productos
+        delete_query = "DELETE FROM categoria WHERE id_categoria = %s"
+        affected = self.execute_query(delete_query, (id_categoria,))
+        if affected:
+            return True, "Categoría eliminada exitosamente"
+        return False, "Error eliminando categoría"
+    # FIN MÉTODOS CRUD CATEGORÍA
+    # 
+    # === MÉTODOS CRUD PARA EDIFICIO ===
+    def get_all_edificios(self):
+        """Obtener todos los edificios usando vista optimizada"""
+        query = "SELECT * FROM vista_edificios_completa"
+        return self.execute_query(query, fetch=True)
+
+    def get_edificio_by_id(self, id_edificio):
+        """Obtener un edificio por ID usando vista optimizada"""
+        query = "SELECT * FROM vista_edificios_completa WHERE id_edificio = %s"
+        result = self.execute_query(query, (id_edificio,), fetch=True)
+        return result[0] if result else None
+
+    def get_all_inventarios(self):
+        """Obtener todos los inventarios disponibles"""
+        query = "SELECT id_inventario, nombre_inventario FROM inventarios WHERE activo = TRUE ORDER BY nombre_inventario"
+        return self.execute_query(query, fetch=True)
+
+   # === MÉTODOS CRUD PARA EDIFICIO ===
+
+    def create_edificio(self, nombre_edificio, direccion, tipo, id_inventario):
+        """Crear nuevo edificio"""
+        query = """
+        INSERT INTO edificio (nombre_edificio, direccion, tipo, id_inventario) 
+        VALUES (%s, %s, %s, %s) RETURNING id_edificio
+        """
+        result = self.execute_query(query, (nombre_edificio, direccion, tipo, id_inventario), fetch=True)
+        if result and len(result) > 0:
+            return result[0]['id_edificio']
+        return None
+
+    def update_edificio(self, id_edificio, nombre_edificio, direccion, tipo, id_inventario):
+        """Actualizar edificio existente"""
+        query = """
+        UPDATE edificio 
+        SET nombre_edificio = %s, direccion = %s, tipo = %s, id_inventario = %s 
+        WHERE id_edificio = %s
+        """
+        affected = self.execute_query(query, (nombre_edificio, direccion, tipo, id_inventario, id_edificio))
+        return affected > 0
+
+    def delete_edificio(self, id_edificio):
+        """Eliminar edificio si no tiene inventario asociado"""
+        # Verificar si el edificio está siendo usado
+        check_query = """
+        SELECT 
+            (SELECT COUNT(*) FROM InvTienda WHERE id_edificio = %s) as count_tienda,
+            (SELECT COUNT(*) FROM InvRaPe WHERE id_edificio = %s) as count_rape
+        """
+        result = self.execute_query(check_query, (id_edificio, id_edificio), fetch=True)
+        
+        if result:
+            count_tienda = result[0]['count_tienda']
+            count_rape = result[0]['count_rape']
+            
+            if count_tienda > 0 or count_rape > 0:
+                total = count_tienda + count_rape
+                return False, f"No se puede eliminar: El edificio tiene {total} item(s) de inventario asociado(s)"
+        
+        # Eliminar si no tiene inventario
+        delete_query = "DELETE FROM edificio WHERE id_edificio = %s"
+        affected = self.execute_query(delete_query, (id_edificio,))
+        if affected:
+            return True, "Edificio eliminado exitosamente"
+        return False, "Error eliminando edificio"
+    # FIN MÉTODOS CRUD EDIFICIO
+    
     
     def create_pool(self, min_conn=1, max_conn=5):
         """Crear pool de conexiones para mejor rendimiento"""
@@ -142,6 +261,14 @@ class Database:
             
             cursor.execute(query, params or ())
             
+            # IMPORTANTE: Siempre hacer commit excepto para SELECT
+            # Determinar si es un SELECT consultando la query
+            query_lower = query.strip().lower()
+            is_select = query_lower.startswith('select') or query_lower.startswith('with')
+            
+            if not is_select:
+                conn.commit()  # Hacer commit para INSERT, UPDATE, DELETE
+            
             if fetch:
                 result = cursor.fetchall()
                 cursor.close()
@@ -151,7 +278,6 @@ class Database:
                     conn.close()
                 return result
             else:
-                conn.commit()
                 affected_rows = cursor.rowcount
                 cursor.close()
                 if conn and self.connection_pool:
