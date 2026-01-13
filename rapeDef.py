@@ -77,11 +77,16 @@ class RAPESystem(BaseSystem):
     # FUNCIONES ESPECÍFICAS DE RA-PE (PLACEHOLDERS)
     # ============================================
     
+ 
     def open_materiales_rape(self):
-        """Placeholder para gestión de materiales RA-PE"""
-        print("[RA-PE] Abriendo gestión de materiales...")
-        messagebox.showinfo("Materiales RA-PE", 
-                          "Gestión de materiales RA-PE\n(En desarrollo)")
+        """Abre la ventana de gestión de materiales RA-PE"""
+        try:
+            from ventanaProductosRaPe import VentanaProductosRaPe
+            VentanaProductosRaPe(self.root, self.system_name)
+        except ImportError as e:
+            messagebox.showerror("Error", f"No se pudo abrir gestión de materiales: {e}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al abrir materiales RA-PE: {e}")
     
     def exportar_excel_rape(self):
         """Placeholder para exportar a Excel RA-PE"""

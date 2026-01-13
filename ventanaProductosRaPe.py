@@ -1,5 +1,5 @@
 """
-Ventana CRUD para gestión de Productos TIENDA
+Ventana CRUD para gestión de Materiales RA-PE
 """
 
 import tkinter as tk
@@ -7,7 +7,7 @@ from tkinter import ttk, messagebox
 import styles
 from db import Database
 
-class VentanaProductosTienda:
+class VentanaProductosRaPe:
     def __init__(self, parent, systemName):
         self.parent = parent
         self.systemName = systemName
@@ -15,7 +15,7 @@ class VentanaProductosTienda:
         
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
-        self.window.title(f"Gestión de Productos TIENDA - {systemName}")
+        self.window.title(f"Gestión de Materiales RA-PE - {systemName}")
         self.window.geometry("1200x700")
         self.window.minsize(1200, 700)
         self.window.maxsize(1200, 700)
@@ -44,37 +44,45 @@ class VentanaProductosTienda:
         mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
-        title = tk.Label(mainFrame, 
-                        text="GESTIÓN DE PRODUCTOS TIENDA", 
-                        font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
-                        bg=styles.COLOR_FONDO, 
-                        fg=styles.COLOR_TEXTO_OSCURO)
-        title.pack(pady=(0, 20))
+        # Título con leyenda
+        titleFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        titleFrame.pack(fill=tk.X, pady=(0, 15))
+        
+        tk.Label(titleFrame, 
+                text="GESTIÓN DE MATERIALES RA-PE", 
+                font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
+                bg=styles.COLOR_FONDO, 
+                fg=styles.COLOR_TEXTO_OSCURO).pack()
+        
+        tk.Label(titleFrame, 
+                text="⚠ Los materiales en AMARILLO tienen stock por debajo del nivel mínimo", 
+                font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_PEQUENO),
+                bg=styles.COLOR_FONDO, 
+                fg=styles.COLOR_ADVERTENCIA).pack(pady=(5, 0))
         
         # Frame para botones de acción principales
         buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         buttonFrame.pack(fill=tk.X, pady=(0, 15))
         
-        # Botón Agregar Producto
+        # Botón Agregar Material
         self.btnAgregar = tk.Button(buttonFrame, 
-                                    text="Agregar Nuevo Producto", 
+                                    text="Agregar Nuevo Material", 
                                     font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                                     bg=styles.COLOR_EXITO, 
                                     fg=styles.COLOR_BLANCO,
                                     width=20,
-                                    command=self.abrirAgregarProducto)
+                                    command=self.abrirAgregarMaterial)
         self.btnAgregar.pack(side=tk.LEFT, padx=(0, 10))
         
         # Botón Editar
         self.btnEditar = tk.Button(buttonFrame, 
-                                   text="Editar Producto", 
+                                   text="Editar Material", 
                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                                    bg=styles.COLOR_INFO, 
                                    fg=styles.COLOR_BLANCO,
                                    width=20,
                                    state=tk.DISABLED,
-                                   command=self.abrirEditarProducto)
+                                   command=self.abrirEditarMaterial)
         self.btnEditar.pack(side=tk.LEFT, padx=(0, 10))
         
         # Botón Detalles/Inventario
@@ -106,21 +114,16 @@ class VentanaProductosTienda:
         tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         tableFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Crear Treeview con columnas para productos
-        columns = ("ID", "Nombre", "Marca", "Categoría", "Precio Venta", 
-                  "Precio Compra", "Color", "Talla", "Stock", "Alarma")
+        # Crear Treeview con columnas para materiales RA-PE
+        columns = ("ID", "Nombre", "Marca", "Categoría", "Stock", "Alarma")
         self.tree = ttk.Treeview(tableFrame, columns=columns, show="headings", height=15)
         
         # Configurar columnas
         column_configs = [
             ("ID", "ID", 60, "center"),
-            ("Nombre", "Nombre Producto", 200, "center"),
+            ("Nombre", "Nombre Material", 200, "center"),
             ("Marca", "Marca", 100, "center"),
             ("Categoría", "Categoría", 120, "center"),
-            ("Precio Venta", "Precio Venta", 100, "center"),
-            ("Precio Compra", "Precio Compra", 100, "center"),
-            ("Color", "Color", 80, "center"),
-            ("Talla", "Talla", 70, "center"),
             ("Stock", "Stock Total", 80, "center"),
             ("Alarma", "Alarma Cap", 80, "center")
         ]
@@ -178,90 +181,57 @@ class VentanaProductosTienda:
         
         # Botón Eliminar
         self.btnEliminar = tk.Button(bottomFrame, 
-                                     text="Eliminar Producto Seleccionado", 
+                                     text="Eliminar Material Seleccionado", 
                                      font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                                      bg=styles.COLOR_PELIGRO, 
                                      fg=styles.COLOR_BLANCO,
                                      width=25,
                                      state=tk.DISABLED,
-                                     command=self.eliminarProducto)
+                                     command=self.eliminarMaterial)
         self.btnEliminar.pack(side=tk.LEFT, padx=(0, 20))
         
         # Evento de selección en Treeview
         self.tree.bind("<<TreeviewSelect>>", self.onTreeSelect)
         
         # Variables para control de selección
-        self.productoSeleccionado = None
-        self.productoNombre = None
+        self.materialSeleccionado = None
+        self.materialNombre = None
     
     def loadProductos(self):
-        """Carga los productos desde la base de datos - VERSIÓN OPTIMIZADA"""
-        # 1. Limpiar tabla de manera eficiente
-        self.tree.delete(*self.tree.get_children())
+        """Carga los materiales RA-PE desde la base de datos"""
+        # Limpiar tabla
+        for item in self.tree.get_children():
+            self.tree.delete(item)
         
-        # 2. Obtener productos con medida de tiempo (para diagnóstico)
-        import time
-        start_time = time.time()
+        # Obtener materiales usando vista optimizada
+        materiales = self.db.get_productos_rape_completo()
         
-        productos = self.db.get_productos_tienda_completo()
-        
-        db_time = time.time() - start_time
-        print(f"[DEBUG] Tiempo consulta BD: {db_time:.3f} segundos")
-        
-        if not productos:
-            return
-        
-        # 3. Preparar datos ANTES de insertar
-        items_to_insert = []
-        for i, producto in enumerate(productos):
-            # Determinar tag para fila alternada
-            tag_actual = 'even' if i % 2 == 0 else 'odd'
+        if materiales:
+            # Ordenar por ID para consistencia
+            materiales_ordenados = sorted(materiales, key=lambda x: x['id_productosrape'])
             
-            # Verificar stock bajo
-            stock_total = producto.get('stock_total', 0)
-            alarma_cap = producto.get('alarma_cap', 5)
-            if stock_total < alarma_cap:
-                tag_actual = 'bajo_stock'
-            
-            # Formatear precios
-            precio_venta_str = f"₡{producto['precio_venta']:,.2f}"
-            precio_compra_str = f"₡{producto['precio_compra']:,.2f}" if producto['precio_compra'] else ""
-            
-            # Preparar fila
-            row_values = (
-                producto['id_productostienda'],
-                producto['nombre_producto_tienda'],
-                producto['nombre_marca'],
-                producto['nombre_categoria'],
-                precio_venta_str,
-                precio_compra_str,
-                producto['color'] or "",
-                producto['talla'] or "",
-                stock_total,
-                alarma_cap
-            )
-            
-            items_to_insert.append((row_values, tag_actual))
-        
-        # 4. Insertar TODOS los items de una vez (más rápido)
-        insert_start = time.time()
-        
-        # Deshabilitar actualización de UI durante inserción masiva
-        self.window.config(cursor="wait")
-        self.tree.config(cursor="wait")
-        
-        for values, tag in items_to_insert:
-            self.tree.insert("", tk.END, values=values, tags=(tag,))
-        
-        # 5. Restaurar cursor y medir tiempo
-        self.tree.config(cursor="")
-        self.window.config(cursor="")
-        
-        insert_time = time.time() - insert_start
-        total_time = time.time() - start_time
+            for i, material in enumerate(materiales_ordenados):
+                # Determinar tag para fila alternada
+                tag_actual = 'even' if i % 2 == 0 else 'odd'
+                
+                # Verificar si stock está bajo alarma
+                stock_total = material.get('stock_total', 0)
+                alarma_cap = material.get('alarma_cap', 5)
+                if stock_total < alarma_cap:
+                    tag_actual = 'bajo_stock'
+                
+                # Insertar con tag
+                self.tree.insert("", tk.END, 
+                                values=(material['id_productosrape'],
+                                       material['nombre_producto_rape'],
+                                       material['nombre_marca'],
+                                       material['nombre_categoria'],
+                                       stock_total,
+                                       alarma_cap),
+                                tags=(tag_actual,))
     
     def onTreeSelect(self, event):
-        """Maneja la selección de un producto en el Treeview"""
+        """Maneja la selección de un material en el Treeview"""
         selection = self.tree.selection()
         if selection:
             # Habilitar botones de edición, detalles y eliminación
@@ -269,50 +239,50 @@ class VentanaProductosTienda:
             self.btnDetalles.config(state=tk.NORMAL)
             self.btnEliminar.config(state=tk.NORMAL)
             
-            # Guardar el producto seleccionado
+            # Guardar el material seleccionado
             item = self.tree.item(selection[0])
-            self.productoSeleccionado = item['values'][0]  # ID
-            self.productoNombre = item['values'][1]  # Nombre
+            self.materialSeleccionado = item['values'][0]  # ID
+            self.materialNombre = item['values'][1]  # Nombre
         else:
             self.btnEditar.config(state=tk.DISABLED)
             self.btnDetalles.config(state=tk.DISABLED)
             self.btnEliminar.config(state=tk.DISABLED)
-            self.productoSeleccionado = None
-            self.productoNombre = None
+            self.materialSeleccionado = None
+            self.materialNombre = None
     
-    def abrirAgregarProducto(self):
-        """Abre ventana para agregar nuevo producto"""
+    def abrirAgregarMaterial(self):
+        """Abre ventana para agregar nuevo material"""
         try:
-            from ventanaDetalleProductoTienda import VentanaDetalleProductoTienda
-            VentanaDetalleProductoTienda(self.window, "Agregar Producto", None, self)
+            from ventanaDetalleMaterialRaPe import VentanaDetalleMaterialRaPe
+            VentanaDetalleMaterialRaPe(self.window, "Agregar Material RA-PE", None, self)
         except ImportError as e:
-            messagebox.showerror("Error", f"No se pudo abrir formulario de producto: {e}")
+            messagebox.showerror("Error", f"No se pudo abrir formulario de material: {e}")
     
-    def abrirEditarProducto(self):
-        """Abre ventana para editar producto existente"""
-        if self.productoSeleccionado:
+    def abrirEditarMaterial(self):
+        """Abre ventana para editar material existente"""
+        if self.materialSeleccionado:
             try:
-                from ventanaDetalleProductoTienda import VentanaDetalleProductoTienda
-                VentanaDetalleProductoTienda(self.window, "Editar Producto", 
-                                           self.productoSeleccionado, self)
+                from ventanaDetalleMaterialRaPe import VentanaDetalleMaterialRaPe
+                VentanaDetalleMaterialRaPe(self.window, "Editar Material RA-PE", 
+                                         self.materialSeleccionado, self)
             except ImportError as e:
                 messagebox.showerror("Error", f"No se pudo abrir formulario de edición: {e}")
         else:
             messagebox.showwarning("Selección requerida", 
-                                 "Por favor seleccione un producto para editar")
+                                 "Por favor seleccione un material para editar")
     
     def abrirDetallesInventario(self):
-        """Abre ventana para ver detalles del inventario del producto"""
-        if self.productoSeleccionado:
+        """Abre ventana para ver detalles del inventario del material"""
+        if self.materialSeleccionado:
             try:
                 from ventanaDistribucionInventario import VentanaDistribucionInventario
                 
                 # Crear ventana de detalles pasando self como callback
                 ventana_detalles = VentanaDistribucionInventario(
                     self.window, 
-                    self.productoSeleccionado, 
-                    self.productoNombre, 
-                    sistema="tienda",  # <-- Especificar sistema
+                    self.materialSeleccionado, 
+                    self.materialNombre, 
+                    sistema="rape",  # Especificar sistema RA-PE
                     callback_obj=self,
                     modo="detalles"
                 )
@@ -321,31 +291,31 @@ class VentanaProductosTienda:
                 messagebox.showerror("Error", f"No se pudo abrir detalles de inventario: {e}")
         else:
             messagebox.showwarning("Selección requerida", 
-                                "Por favor seleccione un producto para ver detalles")
-            
-    def eliminarProducto(self):
-        """Elimina el producto seleccionado"""
-        if not self.productoSeleccionado:
+                                 "Por favor seleccione un material para ver detalles")
+    
+    def eliminarMaterial(self):
+        """Elimina el material seleccionado"""
+        if not self.materialSeleccionado:
             return
         
         # Confirmar eliminación
         confirm = messagebox.askyesno("Confirmar eliminación", 
-                                     f"¿Está seguro de eliminar el producto '{self.productoNombre}'?\n\n"
+                                     f"¿Está seguro de eliminar el material '{self.materialNombre}'?\n\n"
                                      "Esta acción eliminará también todo el inventario asociado.")
         if not confirm:
             return
         
         try:
-            success, message = self.db.delete_producto_tienda(self.productoSeleccionado)
+            success, message = self.db.delete_producto_rape(self.materialSeleccionado)
             if success:
                 messagebox.showinfo("Éxito", message)
                 self.loadProductos()  # Refrescar tabla
-                self.productoSeleccionado = None
-                self.productoNombre = None
+                self.materialSeleccionado = None
+                self.materialNombre = None
                 self.btnEditar.config(state=tk.DISABLED)
                 self.btnDetalles.config(state=tk.DISABLED)
                 self.btnEliminar.config(state=tk.DISABLED)
             else:
                 messagebox.showwarning("Error al eliminar", message)
         except Exception as e:
-            messagebox.showerror("Error", f"Error al eliminar producto: {e}")
+            messagebox.showerror("Error", f"Error al eliminar material: {e}")

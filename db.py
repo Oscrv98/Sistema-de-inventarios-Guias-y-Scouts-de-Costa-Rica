@@ -31,6 +31,10 @@ class Database:
         self.connection_pool = None
         self._initialized = True
     
+    # ============================================
+    # MÉTODOS DE CONEXIÓN Y CONFIGURACIÓN
+    # ============================================
+    
     def check_connection(self):
         """
         Verifica conexión a la base de datos.
@@ -52,7 +56,10 @@ class Database:
             error_msg = f"Error inesperado: {e}"
             return False, error_msg
     
-    # === MÉTODOS CRUD PARA MARCA ===
+    # ============================================
+    # MÉTODOS CRUD PARA MARCA
+    # ============================================
+    
     def get_all_marcas(self):
         """Obtener todas las marcas ordenadas por nombre"""
         query = "SELECT id_marca, nombre_marca FROM marca ORDER BY id_marca, nombre_marca"
@@ -78,7 +85,6 @@ class Database:
     
     def delete_marca(self, id_marca):
         """Eliminar marca si no tiene productos asociados"""
-        # Verificar si la marca está siendo usada
         check_query = """
         SELECT 
             (SELECT COUNT(*) FROM ProductsTienda WHERE id_marca = %s) as count_tienda,
@@ -94,15 +100,16 @@ class Database:
                 total = count_tienda + count_rape
                 return False, f"No se puede eliminar: La marca tiene {total} producto(s) asociado(s)"
         
-        # Eliminar si no tiene productos
         delete_query = "DELETE FROM marca WHERE id_marca = %s"
         affected = self.execute_query(delete_query, (id_marca,))
         if affected:
             return True, "Marca eliminada exitosamente"
         return False, "Error eliminando marca"
-    # FIN MÉTODOS CRUD MARCA
-
-    # === MÉTODOS CRUD PARA CATEGORÍA ===
+    
+    # ============================================
+    # MÉTODOS CRUD PARA CATEGORÍA
+    # ============================================
+    
     def get_all_categorias(self):
         """Obtener todas las categorías ordenadas por nombre"""
         query = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY id_categoria, nombre_categoria"
@@ -130,7 +137,6 @@ class Database:
     
     def delete_categoria(self, id_categoria):
         """Eliminar categoría si no tiene productos asociados"""
-        # Verificar si la categoría está siendo usada
         check_query = """
         SELECT 
             (SELECT COUNT(*) FROM ProductsTienda WHERE id_categoria = %s) as count_tienda,
@@ -146,15 +152,16 @@ class Database:
                 total = count_tienda + count_rape
                 return False, f"No se puede eliminar: La categoría tiene {total} producto(s) asociado(s)"
         
-        # Eliminar si no tiene productos
         delete_query = "DELETE FROM categoria WHERE id_categoria = %s"
         affected = self.execute_query(delete_query, (id_categoria,))
         if affected:
             return True, "Categoría eliminada exitosamente"
         return False, "Error eliminando categoría"
-    # FIN MÉTODOS CRUD CATEGORÍA
-    # 
-    # === MÉTODOS CRUD PARA EDIFICIO ===
+    
+    # ============================================
+    # MÉTODOS CRUD PARA EDIFICIO
+    # ============================================
+    
     def get_all_edificios(self):
         """Obtener todos los edificios usando vista optimizada"""
         query = "SELECT * FROM vista_edificios_completa"
@@ -170,8 +177,6 @@ class Database:
         """Obtener todos los inventarios disponibles"""
         query = "SELECT id_inventario, nombre_inventario FROM inventarios WHERE activo = TRUE ORDER BY nombre_inventario"
         return self.execute_query(query, fetch=True)
-
-   # === MÉTODOS CRUD PARA EDIFICIO ===
 
     def create_edificio(self, nombre_edificio, direccion, tipo, id_inventario):
         """Crear nuevo edificio"""
@@ -196,7 +201,6 @@ class Database:
 
     def delete_edificio(self, id_edificio):
         """Eliminar edificio si no tiene inventario asociado"""
-        # Verificar si el edificio está siendo usado
         check_query = """
         SELECT 
             (SELECT COUNT(*) FROM InvTienda WHERE id_edificio = %s) as count_tienda,
@@ -212,15 +216,15 @@ class Database:
                 total = count_tienda + count_rape
                 return False, f"No se puede eliminar: El edificio tiene {total} item(s) de inventario asociado(s)"
         
-        # Eliminar si no tiene inventario
         delete_query = "DELETE FROM edificio WHERE id_edificio = %s"
         affected = self.execute_query(delete_query, (id_edificio,))
         if affected:
             return True, "Edificio eliminado exitosamente"
         return False, "Error eliminando edificio"
-    # FIN MÉTODOS CRUD EDIFICIO
     
-    # === MÉTODOS PARA PRODUCTOS TIENDA ===
+    # ============================================
+    # MÉTODOS PARA PRODUCTOS TIENDA
+    # ============================================
 
     def get_edificios_tienda(self):
         """Obtener solo los edificios del sistema TIENDA"""
@@ -235,11 +239,14 @@ class Database:
 
     def get_productos_tienda_completo(self):
         """Obtener productos TIENDA completos usando vista optimizada"""
-        query = "SELECT * FROM vista_productos_tienda_completa ORDER BY nombre_producto_tienda"
+        query = """
+        SELECT * FROM vista_productos_tienda_completa 
+        ORDER BY id_productostienda
+        """
         return self.execute_query(query, fetch=True)
 
     def get_inventario_por_producto(self, id_producto):
-        """Obtener todo el inventario de un producto específico"""
+        """Obtener todo el inventario de un producto específico (TIENDA)"""
         query = """
         SELECT 
             it.id_invtienda,
@@ -256,7 +263,9 @@ class Database:
         """
         return self.execute_query(query, (id_producto,), fetch=True)
 
-    # === CRUD PARA PRODUCTS TIENDA ===
+    # ============================================
+    # CRUD PARA PRODUCTS TIENDA
+    # ============================================
 
     def create_producto_tienda(self, nombre, id_marca, id_categoria, precio_venta, 
                             precio_compra=None, color=None, talla=None, alarma_cap=5):
@@ -295,11 +304,9 @@ class Database:
     def delete_producto_tienda(self, id_producto):
         """Eliminar producto TIENDA y su inventario asociado"""
         try:
-            # 1. Primero eliminar el inventario asociado
             delete_inv_query = "DELETE FROM InvTienda WHERE id_productostienda = %s"
             self.execute_query(delete_inv_query, (id_producto,), fetch=False)
             
-            # 2. Luego eliminar el producto
             delete_producto_query = "DELETE FROM ProductsTienda WHERE id_productostienda = %s"
             affected = self.execute_query(delete_producto_query, (id_producto,), fetch=False)
             
@@ -309,7 +316,9 @@ class Database:
         except Exception as e:
             return False, f"Error al eliminar producto: {e}"
 
-    # === CRUD PARA INVENTARIO TIENDA ===
+    # ============================================
+    # CRUD PARA INVENTARIO TIENDA
+    # ============================================
 
     def create_inventario_tienda(self, id_producto, id_edificio, cantidad=0, etiqueta=None, 
                                 estante=None, lugar=None):
@@ -325,8 +334,7 @@ class Database:
 
     def update_inventario_tienda(self, id_invtienda, cantidad=None, etiqueta=None, 
                                 estante=None, lugar=None):
-        """Actualizar registro de inventario"""
-        # Construir query dinámica
+        """Actualizar registro de inventario TIENDA"""
         updates = []
         params = []
         
@@ -354,7 +362,6 @@ class Database:
 
     def create_inventario_para_edificios_tienda(self, id_producto):
         """Crear registros de inventario para todos los edificios TIENDA"""
-        # Obtener todos los edificios TIENDA
         edificios = self.get_edificios_tienda()
         
         if not edificios:
@@ -375,15 +382,145 @@ class Database:
         
         return success_count == len(edificios)
 
-    # === MÉTODOS AUXILIARES ===
+    # ============================================
+    # MÉTODOS PARA PRODUCTOS RA-PE 
+    # ============================================
+
+    def get_productos_rape_completo(self):
+        """Obtener productos RA-PE completos usando vista optimizada"""
+        query = "SELECT * FROM vista_productos_rape_completa ORDER BY id_productosrape"
+        return self.execute_query(query, fetch=True)
+
+    def create_producto_rape(self, nombre, id_marca, id_categoria, alarma_cap=5):
+        """Crear nuevo producto en RA-PE"""
+        query = """
+        INSERT INTO ProductsRaPe 
+        (nombre_producto_rape, id_marca, id_categoria, alarma_cap) 
+        VALUES (%s, %s, %s, %s) 
+        RETURNING id_productosrape
+        """
+        result = self.execute_query(query, (nombre, id_marca, id_categoria, alarma_cap), fetch=True)
+        return result[0]['id_productosrape'] if result else None
+
+    def update_producto_rape(self, id_producto, nombre, id_marca, id_categoria, alarma_cap=None):
+        """Actualizar producto RA-PE existente"""
+        query = """
+        UPDATE ProductsRaPe 
+        SET nombre_producto_rape = %s, 
+            id_marca = %s, 
+            id_categoria = %s, 
+            alarma_cap = %s
+        WHERE id_productosrape = %s
+        """
+        affected = self.execute_query(query, (nombre, id_marca, id_categoria, alarma_cap, id_producto))
+        return affected > 0
+
+    def delete_producto_rape(self, id_producto):
+        """Eliminar producto RA-PE y su inventario asociado"""
+        try:
+            delete_inv_query = "DELETE FROM InvRaPe WHERE id_productosrape = %s"
+            self.execute_query(delete_inv_query, (id_producto,), fetch=False)
+            
+            delete_producto_query = "DELETE FROM ProductsRaPe WHERE id_productosrape = %s"
+            affected = self.execute_query(delete_producto_query, (id_producto,), fetch=False)
+            
+            if affected:
+                return True, "Producto y su inventario eliminados exitosamente"
+            return False, "Error eliminando producto"
+        except Exception as e:
+            return False, f"Error al eliminar producto: {e}"
+
+    def get_inventario_por_producto_rape(self, id_producto):
+        """Obtener todo el inventario de un producto RA-PE específico (ACTUALIZADO)"""
+        query = """
+        SELECT 
+            ir.id_invrape,
+            ir.etiqueta,
+            ir.cantidad,
+            ir.estante,
+            ir.lugar,
+            e.id_edificio,
+            e.nombre_edificio
+        FROM InvRaPe ir
+        JOIN edificio e ON ir.id_edificio = e.id_edificio
+        WHERE ir.id_productosrape = %s
+        ORDER BY e.nombre_edificio
+        """
+        return self.execute_query(query, (id_producto,), fetch=True)
+
+    def get_edificios_rape(self):
+        """Obtener solo los edificios del sistema RA-PE"""
+        query = """
+        SELECT e.id_edificio, e.nombre_edificio 
+        FROM edificio e
+        JOIN inventarios i ON e.id_inventario = i.id_inventario
+        WHERE i.nombre_inventario = 'RA-PE' AND i.activo = TRUE
+        ORDER BY e.nombre_edificio
+        """
+        return self.execute_query(query, fetch=True)
+
+    def create_inventario_para_edificios_rape(self, id_producto):
+        """Crear registros de inventario para todos los edificios RA-PE (ACTUALIZADO)"""
+        edificios = self.get_edificios_rape()
+        
+        if not edificios:
+            return False
+        
+        success_count = 0
+        for edificio in edificios:
+            query = """
+            INSERT INTO InvRaPe 
+            (id_productosrape, id_edificio, cantidad, etiqueta, estante, lugar) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            affected = self.execute_query(query, (
+                id_producto, edificio['id_edificio'], 0, None, None, None
+            ), fetch=False)
+            
+            if affected:
+                success_count += 1
+        
+        return success_count == len(edificios)
+    
+    def update_inventario_rape(self, id_invrape, cantidad=None, etiqueta=None, 
+                          estante=None, lugar=None):
+        """Actualizar registro de inventario RA-PE (ACTUALIZADO)"""
+        updates = []
+        params = []
+        
+        if cantidad is not None:
+            updates.append("cantidad = %s")
+            params.append(cantidad)
+        if etiqueta is not None:
+            updates.append("etiqueta = %s")
+            params.append(etiqueta)
+        if estante is not None:
+            updates.append("estante = %s")
+            params.append(estante)
+        if lugar is not None:
+            updates.append("lugar = %s")
+            params.append(lugar)
+        
+        if not updates:
+            return False
+        
+        query = f"UPDATE InvRaPe SET {', '.join(updates)} WHERE id_invrape = %s"
+        params.append(id_invrape)
+        
+        affected = self.execute_query(query, tuple(params), fetch=False)
+        return affected > 0
+    
+    # ============================================
+    # MÉTODOS AUXILIARES GENERALES
+    # ============================================
 
     def get_all_marcas(self):
-        """Obtener todas las marcas"""
+        """Obtener todas las marcas para comboboxes"""
         query = "SELECT id_marca, nombre_marca FROM marca ORDER BY nombre_marca"
         return self.execute_query(query, fetch=True)
 
     def get_all_categorias(self):
-        """Obtener todas las categorías"""
+        """Obtener todas las categorías para comboboxes"""
         query = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY nombre_categoria"
         return self.execute_query(query, fetch=True)
         
@@ -417,8 +554,12 @@ class Database:
             except Exception as e:
                 print(f"Error devolviendo conexion: {e}")
     
+    # ============================================
+    # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
+    # ============================================
+    
     def execute_query(self, query, params=None, fetch=False):
-        """Ejecutar consulta SQL"""
+        """Ejecutar consulta SQL - método centralizado"""
         conn = None
         cursor = None
         try:
@@ -427,13 +568,11 @@ class Database:
             
             cursor.execute(query, params or ())
             
-            # IMPORTANTE: Siempre hacer commit excepto para SELECT
-            # Determinar si es un SELECT consultando la query
             query_lower = query.strip().lower()
             is_select = query_lower.startswith('select') or query_lower.startswith('with')
             
             if not is_select:
-                conn.commit()  # Hacer commit para INSERT, UPDATE, DELETE
+                conn.commit()
             
             if fetch:
                 result = cursor.fetchall()

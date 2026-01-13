@@ -1,5 +1,6 @@
 """
 Ventana para distribución y edición de inventario por edificio
+GENERICO para TIENDA y RA-PE
 """
 
 import tkinter as tk
@@ -8,20 +9,23 @@ import styles
 from db import Database
 
 class VentanaDistribucionInventario:
-    def __init__(self, parent, producto_id, producto_nombre, callback_obj=None, modo="detalles"):
+    def __init__(self, parent, producto_id, producto_nombre, sistema="tienda", 
+                 callback_obj=None, modo="detalles"):
         """
         Inicializa ventana de distribución de inventario
         
         Args:
             parent: Ventana padre
-            producto_id: ID del producto
-            producto_nombre: Nombre del producto
-            callback_obj: Objeto para callback (opcional)
+            producto_id: ID del producto/material
+            producto_nombre: Nombre del producto/material  
+            sistema: "tienda" o "rape" (determina tablas DB)
+            callback_obj: Objeto para callback
             modo: "detalles" o "agregar" o "editar"
         """
         self.parent = parent
         self.producto_id = producto_id
         self.producto_nombre = producto_nombre
+        self.sistema = sistema.lower()  # "tienda" o "rape"
         self.callback_obj = callback_obj
         self.modo = modo.lower()
         
@@ -31,7 +35,8 @@ class VentanaDistribucionInventario:
         
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
-        self.window.title(f"Distribución de Inventario - {producto_nombre}")
+        title_suffix = "TIENDA" if sistema == "tienda" else "RA-PE"
+        self.window.title(f"Distribución de Inventario {title_suffix} - {producto_nombre}")
         self.window.geometry("900x600")
         self.window.minsize(900, 600) 
         self.window.configure(bg=styles.COLOR_FONDO)
@@ -63,9 +68,10 @@ class VentanaDistribucionInventario:
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
         # Título
-        title_text = "Distribución en Edificios"
+        sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
+        title_text = f"Distribución en Edificios - {sistema_text}"
         if self.es_nuevo_producto:
-            title_text = "Distribuir Producto en Edificios"
+            title_text = f"Distribuir en Edificios - {sistema_text}"
         
         title = tk.Label(mainFrame, 
                         text=title_text, 
@@ -75,8 +81,9 @@ class VentanaDistribucionInventario:
         title.pack(pady=(0, 10))
         
         # Subtítulo con nombre del producto
+        tipo_producto = "Producto" if self.sistema == "tienda" else "Material"
         subtitle = tk.Label(mainFrame, 
-                          text=f"Producto: {self.producto_nombre}", 
+                          text=f"{tipo_producto}: {self.producto_nombre}", 
                           font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                           bg=styles.COLOR_FONDO, 
                           fg=styles.COLOR_TEXTO_MEDIO)
@@ -211,13 +218,16 @@ class VentanaDistribucionInventario:
         self.registroSeleccionado = None
     
     def loadInventario(self):
-        """Carga el inventario del producto desde la base de datos"""
+        """Carga el inventario según el sistema (TIENDA o RA-PE)"""
         # Limpiar tabla
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Obtener inventario del producto
-        inventario = self.db.get_inventario_por_producto(self.producto_id)
+        # Obtener inventario según sistema
+        if self.sistema == "tienda":
+            inventario = self.db.get_inventario_por_producto(self.producto_id)
+        else:  # rape
+            inventario = self.db.get_inventario_por_producto_rape(self.producto_id)
         
         if inventario:
             for i, registro in enumerate(inventario):
@@ -229,7 +239,7 @@ class VentanaDistribucionInventario:
                 
                 # Insertar con tag
                 self.tree.insert("", tk.END, 
-                                values=(registro['id_invtienda'],
+                                values=(registro['id_invtienda'] if self.sistema == 'tienda' else registro['id_invrape'],
                                        registro['nombre_edificio'],
                                        registro['cantidad'],
                                        registro['etiqueta'] or "",
@@ -245,11 +255,16 @@ class VentanaDistribucionInventario:
     def crearRegistrosIniciales(self):
         """Crea registros iniciales de inventario para un nuevo producto"""
         try:
-            success = self.db.create_inventario_para_edificios_tienda(self.producto_id)
+            if self.sistema == "tienda":
+                success = self.db.create_inventario_para_edificios_tienda(self.producto_id)
+            else:  # rape
+                success = self.db.create_inventario_para_edificios_rape(self.producto_id)
+            
             if success:
                 return True
             else:
-                messagebox.showerror("Error", "No se pudieron crear los registros de inventario iniciales")
+                sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
+                messagebox.showerror("Error", f"No se pudieron crear los registros de inventario iniciales para {sistema_text}")
                 return False
         except Exception as e:
             messagebox.showerror("Error", f"Error creando registros iniciales: {e}")
@@ -281,25 +296,26 @@ class VentanaDistribucionInventario:
         
         item = self.tree.item(selection[0])
         registro_data = {
-            'id_invtienda': item['values'][0],
+            'id_inv': item['values'][0],
             'nombre_edificio': item['values'][1],
             'cantidad_actual': item['values'][2],
             'etiqueta_actual': item['values'][3],
             'estante_actual': item['values'][4],
-            'lugar_actual': item['values'][5]
+            'lugar_actual': item['values'][5],
+            'sistema': self.sistema  # Agregar sistema para saber qué tabla usar
         }
         
         # Abrir ventana de edición
         VentanaEditarRegistroInventario(self.window, registro_data, self)
     
-    def actualizarRegistroEnTabla(self, id_invtienda, nuevos_valores):
+    def actualizarRegistroEnTabla(self, id_inv, nuevos_valores):
         """Actualiza un registro en la tabla después de editarlo"""
         for child in self.tree.get_children():
             item = self.tree.item(child)
-            if item['values'][0] == id_invtienda:
+            if item['values'][0] == id_inv:
                 # Actualizar valores
                 self.tree.item(child, values=(
-                    id_invtienda,
+                    id_inv,
                     item['values'][1],  # Edificio (no cambia)
                     nuevos_valores['cantidad'],
                     nuevos_valores['etiqueta'],
@@ -314,14 +330,19 @@ class VentanaDistribucionInventario:
         if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
             self.callback_obj.loadProductos()
         
+        sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
+        tipo_text = "Producto" if self.sistema == "tienda" else "Material"
+        
         messagebox.showinfo("Éxito", 
-                          f"Producto '{self.producto_nombre}' agregado exitosamente con su inventario distribuido.")
+                          f"{tipo_text} '{self.producto_nombre}' agregado exitosamente con su inventario distribuido en {sistema_text}.")
         self.window.destroy()
     
     def cancelarAgregado(self):
         """Cancela el proceso de agregado de producto"""
+        sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
         confirm = messagebox.askyesno("Cancelar", 
-                                     "¿Está seguro de cancelar la distribución?\n\nEl producto se creará pero sin inventario distribuido.")
+                                     f"¿Está seguro de cancelar la distribución en {sistema_text}?\n\n"
+                                     f"El {self.sistema} se creará pero sin inventario distribuido.")
         if confirm:
             self.window.destroy()
     
@@ -342,6 +363,7 @@ class VentanaEditarRegistroInventario:
         self.parent = parent
         self.registro_data = registro_data
         self.callback_obj = callback_obj
+        self.sistema = registro_data.get('sistema', 'tienda')
         self.db = Database()
         
         # Crear ventana emergente
@@ -373,8 +395,9 @@ class VentanaEditarRegistroInventario:
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
         # Título
+        sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
         title = tk.Label(mainFrame, 
-                        text="EDITAR REGISTRO DE INVENTARIO", 
+                        text=f"EDITAR REGISTRO - {sistema_text}", 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_SUBTITULO, styles.PESO_NEGRITA),
                         bg=styles.COLOR_FONDO, 
                         fg=styles.COLOR_TEXTO_OSCURO)
@@ -507,14 +530,24 @@ class VentanaEditarRegistroInventario:
         lugar = lugar if lugar else None
         
         try:
-            # Actualizar en base de datos
-            success = self.db.update_inventario_tienda(
-                id_invtienda=self.registro_data['id_invtienda'],
-                cantidad=cantidad,
-                etiqueta=etiqueta,
-                estante=estante,
-                lugar=lugar
-            )
+            # Actualizar en base de datos según sistema
+            if self.sistema == "tienda":
+                success = self.db.update_inventario_tienda(
+                    id_invtienda=self.registro_data['id_inv'],
+                    cantidad=cantidad,
+                    etiqueta=etiqueta,
+                    estante=estante,
+                    lugar=lugar
+                )
+            else:  # rape
+                # Necesitamos crear este método en db.py
+                success = self.db.update_inventario_rape(
+                    id_invrape=self.registro_data['id_inv'],
+                    cantidad=cantidad,
+                    etiqueta=etiqueta,
+                    estante=estante,
+                    lugar=lugar
+                )
             
             if success:
                 messagebox.showinfo("Éxito", "Registro actualizado exitosamente")
@@ -527,7 +560,7 @@ class VentanaEditarRegistroInventario:
                     'lugar': lugar or ""
                 }
                 self.callback_obj.actualizarRegistroEnTabla(
-                    self.registro_data['id_invtienda'], 
+                    self.registro_data['id_inv'], 
                     nuevos_valores
                 )
                 
