@@ -220,7 +220,173 @@ class Database:
         return False, "Error eliminando edificio"
     # FIN MÉTODOS CRUD EDIFICIO
     
-    
+    # === MÉTODOS PARA PRODUCTOS TIENDA ===
+
+    def get_edificios_tienda(self):
+        """Obtener solo los edificios del sistema TIENDA"""
+        query = """
+        SELECT e.id_edificio, e.nombre_edificio 
+        FROM edificio e
+        JOIN inventarios i ON e.id_inventario = i.id_inventario
+        WHERE i.nombre_inventario = 'TIENDA' AND i.activo = TRUE
+        ORDER BY e.nombre_edificio
+        """
+        return self.execute_query(query, fetch=True)
+
+    def get_productos_tienda_completo(self):
+        """Obtener productos TIENDA completos usando vista optimizada"""
+        query = "SELECT * FROM vista_productos_tienda_completa ORDER BY nombre_producto_tienda"
+        return self.execute_query(query, fetch=True)
+
+    def get_inventario_por_producto(self, id_producto):
+        """Obtener todo el inventario de un producto específico"""
+        query = """
+        SELECT 
+            it.id_invtienda,
+            it.etiqueta,
+            it.cantidad,
+            it.estante,
+            it.lugar,
+            e.id_edificio,
+            e.nombre_edificio
+        FROM InvTienda it
+        JOIN edificio e ON it.id_edificio = e.id_edificio
+        WHERE it.id_productostienda = %s
+        ORDER BY e.nombre_edificio
+        """
+        return self.execute_query(query, (id_producto,), fetch=True)
+
+    # === CRUD PARA PRODUCTS TIENDA ===
+
+    def create_producto_tienda(self, nombre, id_marca, id_categoria, precio_venta, 
+                            precio_compra=None, color=None, talla=None, alarma_cap=5):
+        """Crear nuevo producto en TIENDA"""
+        query = """
+        INSERT INTO ProductsTienda 
+        (nombre_producto_tienda, id_marca, id_categoria, precio_venta, precio_compra, color, talla, alarma_cap) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s) 
+        RETURNING id_productostienda
+        """
+        result = self.execute_query(query, (nombre, id_marca, id_categoria, precio_venta, 
+                                        precio_compra, color, talla, alarma_cap), fetch=True)
+        if result and len(result) > 0:
+            return result[0]['id_productostienda']
+        return None
+
+    def update_producto_tienda(self, id_producto, nombre, id_marca, id_categoria, precio_venta,
+                            precio_compra=None, color=None, talla=None, alarma_cap=None):
+        """Actualizar producto TIENDA existente"""
+        query = """
+        UPDATE ProductsTienda 
+        SET nombre_producto_tienda = %s, 
+            id_marca = %s, 
+            id_categoria = %s, 
+            precio_venta = %s, 
+            precio_compra = %s, 
+            color = %s, 
+            talla = %s, 
+            alarma_cap = %s
+        WHERE id_productostienda = %s
+        """
+        affected = self.execute_query(query, (nombre, id_marca, id_categoria, precio_venta,
+                                            precio_compra, color, talla, alarma_cap, id_producto))
+        return affected > 0
+
+    def delete_producto_tienda(self, id_producto):
+        """Eliminar producto TIENDA y su inventario asociado"""
+        try:
+            # 1. Primero eliminar el inventario asociado
+            delete_inv_query = "DELETE FROM InvTienda WHERE id_productostienda = %s"
+            self.execute_query(delete_inv_query, (id_producto,), fetch=False)
+            
+            # 2. Luego eliminar el producto
+            delete_producto_query = "DELETE FROM ProductsTienda WHERE id_productostienda = %s"
+            affected = self.execute_query(delete_producto_query, (id_producto,), fetch=False)
+            
+            if affected:
+                return True, "Producto y su inventario eliminados exitosamente"
+            return False, "Error eliminando producto"
+        except Exception as e:
+            return False, f"Error al eliminar producto: {e}"
+
+    # === CRUD PARA INVENTARIO TIENDA ===
+
+    def create_inventario_tienda(self, id_producto, id_edificio, cantidad=0, etiqueta=None, 
+                                estante=None, lugar=None):
+        """Crear registro de inventario para un producto en un edificio"""
+        query = """
+        INSERT INTO InvTienda 
+        (id_productostienda, id_edificio, cantidad, etiqueta, estante, lugar) 
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        affected = self.execute_query(query, (id_producto, id_edificio, cantidad, 
+                                            etiqueta, estante, lugar), fetch=False)
+        return affected > 0
+
+    def update_inventario_tienda(self, id_invtienda, cantidad=None, etiqueta=None, 
+                                estante=None, lugar=None):
+        """Actualizar registro de inventario"""
+        # Construir query dinámica
+        updates = []
+        params = []
+        
+        if cantidad is not None:
+            updates.append("cantidad = %s")
+            params.append(cantidad)
+        if etiqueta is not None:
+            updates.append("etiqueta = %s")
+            params.append(etiqueta)
+        if estante is not None:
+            updates.append("estante = %s")
+            params.append(estante)
+        if lugar is not None:
+            updates.append("lugar = %s")
+            params.append(lugar)
+        
+        if not updates:
+            return False
+        
+        query = f"UPDATE InvTienda SET {', '.join(updates)} WHERE id_invtienda = %s"
+        params.append(id_invtienda)
+        
+        affected = self.execute_query(query, tuple(params), fetch=False)
+        return affected > 0
+
+    def create_inventario_para_edificios_tienda(self, id_producto):
+        """Crear registros de inventario para todos los edificios TIENDA"""
+        # Obtener todos los edificios TIENDA
+        edificios = self.get_edificios_tienda()
+        
+        if not edificios:
+            return False
+        
+        success_count = 0
+        for edificio in edificios:
+            success = self.create_inventario_tienda(
+                id_producto=id_producto,
+                id_edificio=edificio['id_edificio'],
+                cantidad=0,
+                etiqueta=None,
+                estante=None,
+                lugar=None
+            )
+            if success:
+                success_count += 1
+        
+        return success_count == len(edificios)
+
+    # === MÉTODOS AUXILIARES ===
+
+    def get_all_marcas(self):
+        """Obtener todas las marcas"""
+        query = "SELECT id_marca, nombre_marca FROM marca ORDER BY nombre_marca"
+        return self.execute_query(query, fetch=True)
+
+    def get_all_categorias(self):
+        """Obtener todas las categorías"""
+        query = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY nombre_categoria"
+        return self.execute_query(query, fetch=True)
+        
     def create_pool(self, min_conn=1, max_conn=5):
         """Crear pool de conexiones para mejor rendimiento"""
         try:

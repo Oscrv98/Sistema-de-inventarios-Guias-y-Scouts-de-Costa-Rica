@@ -221,6 +221,7 @@ class BaseSystem:
         except ImportError as e:
             print(f"Error al importar ventanaCategoria: {e}")
             messagebox.showerror("Error", f"No se pudo abrir gestión de categorías: {e}")
+            
     def openEdificiosWindow(self):
         """Abre la ventana de gestión de edificios"""
         try:
@@ -229,6 +230,15 @@ class BaseSystem:
         except ImportError as e:
             print(f"Error al importar ventanaEdificio: {e}")
             messagebox.showerror("Error", f"No se pudo abrir gestión de edificios: {e}")
+
+    def openProductosTiendaWindow(self):
+        """Abre la ventana de gestión de productos TIENDA"""
+        try:
+            from ventanaProductosTienda import VentanaProductosTienda
+            VentanaProductosTienda(self.root, self.system_name)
+        except ImportError as e:
+            print(f"Error al importar ventanaProductosTienda: {e}")
+            messagebox.showerror("Error", f"No se pudo abrir gestión de productos: {e}")
 
     def placeholder_func(self):
         """Función placeholder que luego será reemplazada"""

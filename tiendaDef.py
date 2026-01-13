@@ -77,11 +77,19 @@ class TiendaSystem(BaseSystem):
     # FUNCIONES ESPECÍFICAS DE TIENDA (PLACEHOLDERS)
     # ============================================
     
+    # REEMPLAZAR el método open_productos_tienda() por:
     def open_productos_tienda(self):
-        """Placeholder para gestión de productos TIENDA"""
-        print("[TIENDA] Abriendo gestión de productos...")
-        messagebox.showinfo("Productos Tienda", 
-                          "Gestión de productos TIENDA\n(En desarrollo)")
+        """Abre la ventana de gestión de productos TIENDA"""
+        try:
+            from ventanaProductosTienda import VentanaProductosTienda
+            VentanaProductosTienda(self.root, self.system_name)
+        except ImportError as e:
+            print(f"Error al importar ventanaProductosTienda: {e}")
+            messagebox.showerror("Error", 
+                            f"No se pudo abrir gestión de productos: {e}")
+        except Exception as e:
+            messagebox.showerror("Error", 
+                            f"Error al abrir productos TIENDA: {e}")
     
     def exportar_excel_tienda(self):
         """Placeholder para exportar a Excel TIENDA"""
