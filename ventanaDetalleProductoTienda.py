@@ -266,8 +266,31 @@ class VentanaDetalleProductoTienda:
             messagebox.showwarning("Valor inválido", f"{campo} debe ser un número")
             return None
     
+    def actualizarAlarmasSiEstanAbiertas(self):
+        """Intenta actualizar ventanas de alarmas si están abiertas"""
+        try:
+            # Buscar ventana raíz de la aplicación
+            root_window = self.window.winfo_toplevel()
+            
+            # Buscar entre todas las ventanas hijas del root
+            for child in root_window.winfo_children():
+                if isinstance(child, tk.Toplevel):
+                    try:
+                        title = child.title().lower()
+                        if 'alarma' in title or 'alerta' in title:
+                            if hasattr(child, 'actualizarTabla'):
+                                child.actualizarTabla()
+                                print(f"[INFO] Tabla de alarmas actualizada desde detalle producto")
+                                return True
+                    except:
+                        continue
+        except Exception as e:
+            print(f"[ERROR] Error buscando alarmas: {e}")
+        
+        return False
+    
     def guardarProducto(self):
-        """Guarda o actualiza el producto"""
+        """Guarda o actualiza el producto - VERSIÓN CORREGIDA"""
         # Validar campos requeridos
         nombre = self.nombreVar.get().strip()
         if not nombre:
@@ -315,11 +338,13 @@ class VentanaDetalleProductoTienda:
                 if success:
                     messagebox.showinfo("Éxito", f"Producto '{nombre}' actualizado exitosamente")
                     
-                    # 1. PRIMERO refrescar la tabla principal
-                    if self.callback_obj:
+                    # Actualizar tabla principal
+                    if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
                         self.callback_obj.loadProductos()
                     
-                    # 2. LUEGO cerrar esta ventana
+                    # Intentar actualizar alarmas si están abiertas
+                    self.actualizarAlarmasSiEstanAbiertas()
+                    
                     self.window.destroy()
                 else:
                     messagebox.showerror("Error", "No se pudo actualizar el producto")
@@ -345,8 +370,10 @@ class VentanaDetalleProductoTienda:
                         # Refrescar tabla aunque haya problemas
                         if self.callback_obj:
                             self.callback_obj.loadProductos()
+
+                        # Intentar actualizar alarmas si están abiertas
+                        self.actualizarAlarmasSiEstanAbiertas()
                         
-                        # Cerrar ventana
                         self.window.destroy()
                 else:
                     messagebox.showerror("Error", "No se pudo crear el producto")

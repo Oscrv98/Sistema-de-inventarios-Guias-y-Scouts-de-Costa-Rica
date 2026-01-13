@@ -27,8 +27,6 @@ class VentanaDetalleMaterialRaPe:
         
         # Centrar ventana
         self.centerWindow(600, 550)  # ✅ CORREGIDO: Nuevos tamaños
-        
-        # Crear interfaz
         self.createWidgets()
         self.loadDatos()
     
@@ -186,8 +184,31 @@ class VentanaDetalleMaterialRaPe:
                 self.categoriaCombobox.set(material['nombre_categoria'])
                 self.alarmaVar.set(material['alarma_cap'])
     
+    def actualizarAlarmasSiEstanAbiertas(self):
+        """Intenta actualizar ventanas de alarmas RA-PE si están abiertas"""
+        try:
+            # Buscar ventana raíz de la aplicación
+            root_window = self.window.winfo_toplevel()
+            
+            # Buscar entre todas las ventanas hijas del root
+            for child in root_window.winfo_children():
+                if isinstance(child, tk.Toplevel):
+                    try:
+                        title = child.title().lower()
+                        if 'alarma' in title or 'alerta' in title:
+                            if hasattr(child, 'actualizarTabla'):
+                                child.actualizarTabla()
+                                print(f"[INFO] Tabla de alarmas RA-PE actualizada desde detalle material")
+                                return True
+                    except:
+                        continue
+        except Exception as e:
+            print(f"[ERROR] Error buscando alarmas RA-PE: {e}")
+        
+        return False
+    
     def guardarMaterial(self):
-        """Guarda o actualiza el material"""
+        """Guarda o actualiza el material - VERSIÓN ACTUALIZADA CON ALARMAS"""
         # Validar campos requeridos
         nombre = self.nombreVar.get().strip()
         if not nombre:
@@ -224,10 +245,13 @@ class VentanaDetalleMaterialRaPe:
                     messagebox.showinfo("Éxito", f"Material '{nombre}' actualizado exitosamente")
                     
                     # 1. PRIMERO refrescar la tabla principal
-                    if self.callback_obj:
+                    if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
                         self.callback_obj.loadProductos()
                     
-                    # 2. LUEGO cerrar esta ventana
+                    # 2. Intentar actualizar alarmas si están abiertas
+                    self.actualizarAlarmasSiEstanAbiertas()
+                    
+                    # 3. LUEGO cerrar esta ventana
                     self.window.destroy()
                 else:
                     messagebox.showerror("Error", "No se pudo actualizar el material")
@@ -251,8 +275,11 @@ class VentanaDetalleMaterialRaPe:
                                              "Material creado pero hubo problemas al crear el inventario")
                         
                         # Refrescar tabla aunque haya problemas
-                        if self.callback_obj:
+                        if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
                             self.callback_obj.loadProductos()
+                        
+                        # Intentar actualizar alarmas
+                        self.actualizarAlarmasSiEstanAbiertas()
                         
                         # Cerrar ventana
                         self.window.destroy()

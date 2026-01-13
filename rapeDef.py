@@ -13,6 +13,9 @@ class RAPESystem(BaseSystem):
         
         # Crear panel de alarmas específico para RA-PE
         self.create_alarm_panel_rape()
+        
+        # Actualizar alarmas UNA SOLA VEZ al abrir el menú
+        self.update_alarms_rape()
     
     def create_alarm_panel_rape(self):
         """Crea panel de alarmas específico para RA-PE"""
@@ -31,7 +34,7 @@ class RAPESystem(BaseSystem):
         alarm_title.grid(row=0, column=0, columnspan=3, 
                         padx=styles.PADDING_X, pady=5, sticky="w")
         
-        # Contadores específicos para RA-PE
+        # Contadores específicos para RA-PE (valores iniciales)
         self.lbl_agotados = tk.Label(alarm_frame, 
                                     text="Materiales agotados: 0",
                                     font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_PEQUENO, styles.PESO_NORMAL),
@@ -48,7 +51,7 @@ class RAPESystem(BaseSystem):
         self.lbl_reponer.grid(row=2, column=0, 
                              padx=styles.PADDING_X, pady=2, sticky="w")
         
-        # Botón para ver detalles (placeholder)
+        # Botón para ver detalles de alarmas RA-PE
         btn_ver = tk.Button(alarm_frame, 
                            text="Ver Materiales", 
                            font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO, styles.PESO_NEGRITA),
@@ -60,7 +63,7 @@ class RAPESystem(BaseSystem):
         btn_ver.grid(row=1, column=1, rowspan=2, 
                     padx=5, pady=2)
         
-        # Botón para actualizar (placeholder)
+        # Botón para actualizar alarmas (refresh manual)
         btn_update = tk.Button(alarm_frame, 
                               text="Actualizar", 
                               font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO),
@@ -69,15 +72,64 @@ class RAPESystem(BaseSystem):
                               width=8,
                               relief="flat",
                               cursor=styles.CURSOR_BOTON,
-                              command=self.update_alarms_rape)
+                              command=self.update_alarms_rape)  # Conectado a la función
         btn_update.grid(row=1, column=2, rowspan=2, 
                        padx=(0, styles.PADDING_X), pady=2)
     
-    # ============================================
-    # FUNCIONES ESPECÍFICAS DE RA-PE (PLACEHOLDERS)
-    # ============================================
+    def update_alarms_rape(self):
+        """Actualiza las alarmas de materiales RA-PE con datos reales de la BD"""
+        try:
+            # Importar Database aquí para evitar importaciones circulares
+            from db import Database
+            
+            db = Database()
+            alarmas = db.get_alarmas_rape()
+            
+            # Inicializar contadores
+            agotados = 0
+            reponer = 0
+            
+            # Contar alarmas por estado
+            if alarmas:
+                for a in alarmas:
+                    if a['estado'] == 'AGOTADO':
+                        agotados += 1
+                    elif a['estado'] == 'A REPONER':
+                        reponer += 1
+            
+            # Actualizar las etiquetas en pantalla
+            self.lbl_agotados.config(text=f"Materiales agotados: {agotados}")
+            self.lbl_reponer.config(text=f"Materiales a reponer: {reponer}")
+            
+            # Cambiar colores según prioridad
+            if agotados > 0:
+                self.lbl_agotados.config(fg=styles.COLOR_PELIGRO)  # Rojo para agotados
+            else:
+                # Volver al color original si no hay agotados
+                self.lbl_agotados.config(fg=styles.COLOR_AGOTADO)
+            
+            if reponer > 0:
+                self.lbl_reponer.config(fg=styles.COLOR_ADVERTENCIA)  # Amarillo/Naranja para reponer
+            else:
+                # Volver al color original si no hay por reponer
+                self.lbl_reponer.config(fg=styles.COLOR_REPONER)
+            
+            # Debug en consola
+            print(f"[RA-PE] Alarmas actualizadas: {agotados} agotados, {reponer} a reponer")
+            if alarmas:
+                for a in alarmas:
+                    print(f"  - {a['nombre_producto']}: {a['estado']} (Stock: {a['cantidad_total']}, Alarma: {a['alarma_cap']})")
+            
+        except Exception as e:
+            print(f"Error actualizando alarmas RA-PE: {e}")
+            # Mostrar error en la interfaz
+            self.lbl_agotados.config(text="Error cargando alarmas", fg=styles.COLOR_PELIGRO)
+            self.lbl_reponer.config(text="Click en Actualizar", fg=styles.COLOR_ADVERTENCIA)
     
- 
+    # ============================================
+    # FUNCIONES ESPECÍFICAS DE RA-PE
+    # ============================================
+
     def open_materiales_rape(self):
         """Abre la ventana de gestión de materiales RA-PE"""
         try:
@@ -95,13 +147,12 @@ class RAPESystem(BaseSystem):
                           "Exportando datos RA-PE a Excel\n(En desarrollo)")
     
     def show_alarm_details_rape(self):
-        """Placeholder para ver detalles de alarmas RA-PE"""
-        print("[RA-PE] Mostrando detalles de alarmas...")
-        messagebox.showinfo("Alarmas RA-PE", 
-                          "Mostrando materiales con alertas RA-PE\n(En desarrollo)")
-    
-    def update_alarms_rape(self):
-        """Placeholder para actualizar alarmas RA-PE"""
-        print("[RA-PE] Actualizando alarmas...")
-        messagebox.showinfo("Actualizar Alarmas", 
-                          "Actualizando alarmas RA-PE\n(En desarrollo)")
+        """Abre ventana para ver detalles de alarmas RA-PE"""
+        try:
+            # Intentar importar ventana específica de alarmas
+            from ventanaAlarmaRape import VentanaAlarmasRaPe
+            VentanaAlarmasRaPe(self.root, self.system_name)
+        except ImportError as e:
+            print(f"ventanaAlarmasRaPe no encontrada: {e}")
+            # Si no existe, abrir la ventana principal de materiales
+            self.open_materiales_rape()

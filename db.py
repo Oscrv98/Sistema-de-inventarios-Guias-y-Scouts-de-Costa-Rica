@@ -554,7 +554,93 @@ class Database:
             except Exception as e:
                 print(f"Error devolviendo conexion: {e}")
     
-    # ============================================
+    def get_alarmas_tienda(self):
+        """Obtener productos TIENDA con alarmas (agotados o a reponer)"""
+        query = "SELECT * FROM vista_alarmas_tienda ORDER BY estado, nombre_producto"
+        return self.execute_query(query, fetch=True)
+
+    def get_alarmas_rape(self):
+        """Obtener materiales RA-PE con alarmas (agotados o a reponer)"""
+        query = "SELECT * FROM vista_alarmas_rape ORDER BY estado, nombre_producto"
+        return self.execute_query(query, fetch=True)
+
+    def get_alarmas_tienda(self):
+        """Obtener productos TIENDA con alarmas (agotados o a reponer)"""
+        query = """
+        SELECT 
+            va.id_productostienda,
+            va.nombre_producto,
+            va.alarma_cap,
+            va.cantidad_total,
+            va.estado,
+            va.num_ubicaciones,
+            pt.nombre_producto_tienda,
+            m.nombre_marca,
+            c.nombre_categoria,
+            pt.precio_venta
+        FROM vista_alarmas_tienda va
+        JOIN ProductsTienda pt ON va.id_productostienda = pt.id_productostienda
+        LEFT JOIN marca m ON pt.id_marca = m.id_marca
+        LEFT JOIN categoria c ON pt.id_categoria = c.id_categoria
+        ORDER BY va.estado DESC, va.cantidad_total ASC
+        """
+        return self.execute_query(query, fetch=True)
+
+    # En db.py, añadir al final de la clase Database:
+    def get_export_data_tienda(self):
+        """Obtiene todos los datos necesarios para exportar TIENDA a Excel"""
+        try:
+            # Hoja 1: Resumen de productos (vista completa)
+            query_resumen = """
+            SELECT 
+                nombre_producto_tienda as "Producto",
+                nombre_marca as "Marca",
+                nombre_categoria as "Categoría",
+                precio_venta as "Precio Venta",
+                precio_compra as "Precio Compra",
+                color as "Color",
+                talla as "Talla",
+                alarma_cap as "Nivel Alarma",
+                stock_total as "Stock Total",
+                num_ubicaciones as "Ubicaciones",
+                lista_edificios as "Edificios"
+            FROM vista_productos_tienda_completa 
+            ORDER BY nombre_producto_tienda
+            """
+            
+            resumen_data = self.execute_query(query_resumen, fetch=True)
+            
+            # Hoja 2: Detalle de inventario por edificio
+            query_detalle = """
+            SELECT 
+                p.nombre_producto_tienda as "Producto",
+                e.nombre_edificio as "Edificio",
+                i.cantidad as "Cantidad",
+                i.estante as "Estante",
+                i.lugar as "Lugar",
+                i.etiqueta as "Etiqueta",
+                COALESCE(m.nombre_marca, 'Sin marca') as "Marca",
+                COALESCE(c.nombre_categoria, 'Sin categoría') as "Categoría"
+            FROM ProductsTienda p
+            LEFT JOIN InvTienda i ON p.id_productostienda = i.id_productostienda
+            LEFT JOIN edificio e ON i.id_edificio = e.id_edificio
+            LEFT JOIN marca m ON p.id_marca = m.id_marca
+            LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
+            WHERE e.id_inventario = 1 OR e.id_inventario IS NULL  -- Solo edificios TIENDA
+            ORDER BY p.nombre_producto_tienda, e.nombre_edificio
+            """
+            
+            detalle_data = self.execute_query(query_detalle, fetch=True)
+            
+            return {
+                'resumen': resumen_data if resumen_data else [],
+                'detalle': detalle_data if detalle_data else []
+            }
+            
+        except Exception as e:
+            print(f"Error obteniendo datos para exportación TIENDA: {e}")
+            return {'resumen': [], 'detalle': []}
+        
     # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
     # ============================================
     

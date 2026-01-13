@@ -307,7 +307,7 @@ class VentanaDistribucionInventario:
         
         # Abrir ventana de edición
         VentanaEditarRegistroInventario(self.window, registro_data, self)
-    
+        
     def actualizarRegistroEnTabla(self, id_inv, nuevos_valores):
         """Actualiza un registro en la tabla después de editarlo"""
         for child in self.tree.get_children():
@@ -507,6 +507,40 @@ class VentanaEditarRegistroInventario:
                                command=self.window.destroy)
         btnCancelar.pack(side=tk.LEFT)
     
+    def buscarYActualizarAlarmas(self):
+        """Busca ventana de alarmas y la actualiza - VERSIÓN MEJORADA"""
+        try:
+            # Si el callback_obj es una ventana de alarmas, actualizarla directamente
+            if hasattr(self.callback_obj, 'callback_obj'):
+                alarm_window = self.callback_obj.callback_obj
+                if alarm_window and hasattr(alarm_window, 'actualizarTabla'):
+                    alarm_window.actualizarTabla()
+                    print(f"[INFO] Tabla de alarmas actualizada directamente desde inventario")
+                    return True
+            
+            # Buscar ventana de alarmas en la jerarquía de ventanas
+            # Buscar en el parent principal (ventana raíz de la aplicación)
+            root_window = self.window.winfo_toplevel()
+            
+            # Buscar entre todas las ventanas hijas del root
+            for child in root_window.winfo_children():
+                if isinstance(child, tk.Toplevel):
+                    try:
+                        title = child.title().lower()
+                        if 'alarma' in title or 'alerta' in title:
+                            if hasattr(child, 'actualizarTabla'):
+                                child.actualizarTabla()
+                                print(f"[INFO] Ventana de alarmas encontrada y actualizada")
+                                return True
+                    except:
+                        continue
+                        
+        except Exception as e:
+            print(f"[ERROR] Error buscando alarmas: {e}")
+        
+        print("[INFO] No se encontró ventana de alarmas para actualizar")
+        return False
+
     def guardarCambios(self):
         """Guarda los cambios del registro de inventario"""
         # Validar cantidad
@@ -540,7 +574,6 @@ class VentanaEditarRegistroInventario:
                     lugar=lugar
                 )
             else:  # rape
-                # Necesitamos crear este método en db.py
                 success = self.db.update_inventario_rape(
                     id_invrape=self.registro_data['id_inv'],
                     cantidad=cantidad,
@@ -564,10 +597,14 @@ class VentanaEditarRegistroInventario:
                     nuevos_valores
                 )
                 
-                # Si hay callback principal, también refrescar tabla principal
-                if hasattr(self.callback_obj, 'callback_obj') and self.callback_obj.callback_obj:
-                    if hasattr(self.callback_obj.callback_obj, 'loadProductos'):
-                        self.callback_obj.callback_obj.loadProductos()
+                # Actualizar ventana de alarmas si está abierta
+                self.buscarYActualizarAlarmas()
+                
+                # Actualizar tabla principal si hay callback principal
+                if hasattr(self.callback_obj, 'callback_obj'):
+                    main_callback = self.callback_obj.callback_obj
+                    if main_callback and hasattr(main_callback, 'loadProductos'):
+                        main_callback.loadProductos()
                 
                 self.window.destroy()
             else:
