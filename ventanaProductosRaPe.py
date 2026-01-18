@@ -1,34 +1,245 @@
-"""
-Ventana CRUD para gestión de Materiales RA-PE
-"""
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import styles
-from db import Database
 
 class VentanaProductosRaPe:
-    def __init__(self, parent, systemName):
-        self.parent = parent
-        self.systemName = systemName
-        self.db = Database()
+    def __init__(self, root, system_name):
+        self.root = root
+        self.system_name = system_name
+        self.materiales_data = []  # Almacenar datos completos para filtrado
         
-        # Crear ventana emergente
-        self.window = tk.Toplevel(parent)
-        self.window.title(f"Gestión de Materiales RA-PE - {systemName}")
-        self.window.geometry("1200x700")
-        self.window.minsize(1200, 700)
-        self.window.maxsize(1200, 700)
+        # Configurar ventana
+        self.window = tk.Toplevel(root)
+        self.window.title(f"Materiales RA-PE - {system_name}")
+        
+        # Tamaño grande desde el inicio
+        self.window.geometry("1500x900")
+        self.window.minsize(1450, 850)
+        
+        # Centrar ventana usando nuestra función
+        self.centerWindow(1500, 900)
+        
         self.window.configure(bg=styles.COLOR_FONDO)
-        self.window.transient(parent)
+        self.window.transient(root)
         self.window.grab_set()
         
-        # Centrar ventana
-        self.centerWindow(1200, 700)
+        # Frame principal
+        self.main_frame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Crear interfaz
-        self.createWidgets()
-        self.loadProductos()
+        # Título con color del sistema RA-PE - ¡CORREGIDO!
+        color_sistema = styles.COLOR_RAPE  # Es COLOR_RAPE, no COLOR_RA_PE
+        title_frame = tk.Frame(self.main_frame, bg=color_sistema)
+        title_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        self.lbl_titulo = tk.Label(title_frame, 
+                                  text="GESTIÓN DE MATERIALES RA-PE",
+                                  font=(styles.FUENTE_PRINCIPAL, 18, "bold"),
+                                  bg=color_sistema, 
+                                  fg=styles.COLOR_BLANCO,
+                                  padx=20, pady=10)
+        self.lbl_titulo.pack()
+        
+        # ============================================
+        # BARRA SUPERIOR DE CONTROLES
+        # ============================================
+        top_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
+        top_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        # Botones a la izquierda
+        btn_frame_left = tk.Frame(top_frame, bg=styles.COLOR_FONDO)
+        btn_frame_left.pack(side=tk.LEFT)
+        
+        self.btn_agregar = tk.Button(btn_frame_left, 
+                                    text="Agregar Material",
+                                    font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                    bg=styles.COLOR_EXITO,
+                                    fg=styles.COLOR_BLANCO,
+                                    width=15,
+                                    height=1,
+                                    cursor="hand2",
+                                    command=self.agregar_material)
+        self.btn_agregar.pack(side=tk.LEFT, padx=(0, 10))
+        
+        self.btn_editar = tk.Button(btn_frame_left,
+                                   text="Editar Material",
+                                   font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                   bg=styles.COLOR_ADVERTENCIA,
+                                   fg=styles.COLOR_BLANCO,
+                                   width=15,
+                                   height=1,
+                                   state=tk.DISABLED,
+                                   cursor="hand2",
+                                   command=self.editar_material)
+        self.btn_editar.pack(side=tk.LEFT, padx=(0, 10))
+        
+        self.btn_detalles = tk.Button(btn_frame_left,
+                                     text="Ver Detalles/Inventario",
+                                     font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                     bg=styles.COLOR_INFO,
+                                     fg=styles.COLOR_BLANCO,
+                                     width=20,
+                                     height=1,
+                                     state=tk.DISABLED,
+                                     cursor="hand2",
+                                     command=self.ver_detalles)
+        self.btn_detalles.pack(side=tk.LEFT)
+        
+        # Barra de búsqueda a la derecha
+        search_frame = tk.Frame(top_frame, bg=styles.COLOR_FONDO)
+        search_frame.pack(side=tk.RIGHT)
+        
+        self.lbl_buscar = tk.Label(search_frame,
+                                  text="Buscar:",
+                                  font=(styles.FUENTE_PRINCIPAL, 11),
+                                  bg=styles.COLOR_FONDO,
+                                  fg=styles.COLOR_TEXTO_OSCURO)
+        self.lbl_buscar.pack(side=tk.LEFT, padx=(0, 8))
+        
+        self.entry_buscar = tk.Entry(search_frame,
+                                    font=(styles.FUENTE_PRINCIPAL, 11),
+                                    width=35,
+                                    relief=tk.SOLID,
+                                    borderwidth=1)
+        self.entry_buscar.pack(side=tk.LEFT, padx=(0, 10))
+        self.entry_buscar.insert(0, "Buscar por nombre, marca o categoría...")
+        self.entry_buscar.config(fg="grey")
+        
+        # Eventos para el placeholder
+        self.entry_buscar.bind("<FocusIn>", self.on_entry_focus_in)
+        self.entry_buscar.bind("<FocusOut>", self.on_entry_focus_out)
+        self.entry_buscar.bind("<KeyRelease>", self.filtrar_tabla)
+        
+        # ============================================
+        # TABLA DE MATERIALES - VERSIÓN SIMPLE QUE FUNCIONA
+        # ============================================
+        table_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
+        table_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Scrollbars
+        v_scrollbar = ttk.Scrollbar(table_frame, orient="vertical")
+        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        h_scrollbar = ttk.Scrollbar(table_frame, orient="horizontal")
+        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        # Treeview - ENFOQUE DIRECTO
+        # Configurar el Treeview de manera FORZADA
+        style = ttk.Style()
+        
+        # PRIMER INTENTO: Configurar estilo básico
+        style.configure("Treeview",
+                       font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
+                       rowheight=25,
+                       background="white",
+                       fieldbackground="white",
+                       foreground=styles.COLOR_TEXTO_OSCURO)
+        
+        # Configurar headings específicamente
+        style.configure("Treeview.Heading",
+                       font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
+                       background=styles.COLOR_TREEVIEW_HEADING,
+                       foreground=styles.COLOR_BLANCO,
+                       relief="flat",
+                       padding=(5, 5))
+        
+        # Usar map para asegurar colores
+        style.map('Treeview.Heading',
+                 background=[('active', styles.COLOR_TREEVIEW_HEADING),
+                            ('!active', styles.COLOR_TREEVIEW_HEADING)],
+                 foreground=[('active', styles.COLOR_BLANCO),
+                            ('!active', styles.COLOR_BLANCO)])
+        
+        # Crear Treeview normal - Columnas simplificadas para RA-PE
+        self.tree = ttk.Treeview(table_frame,
+                                columns=("ID", "Nombre", "Marca", "Categoría", 
+                                        "Stock", "Alarma"),
+                                yscrollcommand=v_scrollbar.set,
+                                xscrollcommand=h_scrollbar.set,
+                                selectmode="browse",
+                                height=22)
+        
+        v_scrollbar.config(command=self.tree.yview)
+        h_scrollbar.config(command=self.tree.xview)
+        
+        # Configurar columnas
+        column_widths = {
+            "ID": 60,
+            "Nombre": 300,
+            "Marca": 180,
+            "Categoría": 200,
+            "Stock": 120,
+            "Alarma": 120
+        }
+        
+        for col in self.tree["columns"]:
+            self.tree.column(col, width=column_widths[col], anchor="center")
+            self.tree.heading(col, text=col, anchor="center")
+        
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        
+        self.tree.pack(fill=tk.BOTH, expand=True)
+        
+        # Evento de selección
+        self.tree.bind("<<TreeviewSelect>>", self.on_item_selected)
+        
+        # Forzar colores después de mostrar
+        self.window.after(100, self.forzar_colores_heading)
+        
+        # ============================================
+        # BARRA INFERIOR DE CONTROLES
+        # ============================================
+        bottom_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
+        bottom_frame.pack(fill=tk.X, pady=(20, 0))
+        
+        self.btn_eliminar = tk.Button(bottom_frame,
+                                     text="Eliminar Material",
+                                     font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                     bg=styles.COLOR_PELIGRO,
+                                     fg=styles.COLOR_BLANCO,
+                                     width=20,
+                                     height=1,
+                                     state=tk.DISABLED,
+                                     cursor="hand2",
+                                     command=self.eliminar_material)
+        self.btn_eliminar.pack(side=tk.LEFT)
+        
+        self.btn_cerrar = tk.Button(bottom_frame,
+                                   text="Cerrar",
+                                   font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                   bg=styles.COLOR_TEXTO_MEDIO,
+                                   fg=styles.COLOR_BLANCO,
+                                   width=15,
+                                   height=1,
+                                   cursor="hand2",
+                                   command=self.window.destroy)
+        self.btn_cerrar.pack(side=tk.RIGHT)
+        
+        # Cargar datos
+        self.cargar_materiales()
+    
+    def forzar_colores_heading(self):
+        """Intenta forzar los colores de los headings después de que se muestra la ventana"""
+        try:
+            style = ttk.Style()
+            
+            # Intentar cambiar a tema 'clam' para mejor compatibilidad
+            try:
+                style.theme_use('clam')
+                
+                # Reconfigurar con tema 'clam'
+                style.configure("Treeview.Heading",
+                               background=styles.COLOR_TREEVIEW_HEADING,
+                               foreground=styles.COLOR_BLANCO,
+                               font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA))
+                
+                print("Tema cambiado a 'clam' y colores reconfigurados")
+                
+            except:
+                print("No se pudo cambiar a tema 'clam'")
+            
+        except Exception as e:
+            print(f"Error forzando colores: {e}")
     
     def centerWindow(self, width, height):
         """Centra la ventana en la pantalla"""
@@ -38,284 +249,193 @@ class VentanaProductosRaPe:
         y = (screenHeight // 2) - (height // 2)
         self.window.geometry(f"{width}x{height}+{x}+{y}")
     
-    def createWidgets(self):
-        """Crea todos los widgets de la ventana principal"""
-        # Frame principal
-        mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
-        mainFrame.pack(fill=tk.BOTH, expand=True)
-        
-        # Título con leyenda
-        titleFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
-        titleFrame.pack(fill=tk.X, pady=(0, 15))
-        
-        tk.Label(titleFrame, 
-                text="GESTIÓN DE MATERIALES RA-PE", 
-                font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
-                bg=styles.COLOR_FONDO, 
-                fg=styles.COLOR_TEXTO_OSCURO).pack()
-        
-        tk.Label(titleFrame, 
-                text="⚠ Los materiales en AMARILLO tienen stock por debajo del nivel mínimo", 
-                font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_PEQUENO),
-                bg=styles.COLOR_FONDO, 
-                fg=styles.COLOR_ADVERTENCIA).pack(pady=(5, 0))
-        
-        # Frame para botones de acción principales
-        buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
-        buttonFrame.pack(fill=tk.X, pady=(0, 15))
-        
-        # Botón Agregar Material
-        self.btnAgregar = tk.Button(buttonFrame, 
-                                    text="Agregar Nuevo Material", 
-                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
-                                    bg=styles.COLOR_EXITO, 
-                                    fg=styles.COLOR_BLANCO,
-                                    width=20,
-                                    command=self.abrirAgregarMaterial)
-        self.btnAgregar.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Botón Editar
-        self.btnEditar = tk.Button(buttonFrame, 
-                                   text="Editar Material", 
-                                   font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
-                                   bg=styles.COLOR_INFO, 
-                                   fg=styles.COLOR_BLANCO,
-                                   width=20,
-                                   state=tk.DISABLED,
-                                   command=self.abrirEditarMaterial)
-        self.btnEditar.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Botón Detalles/Inventario
-        self.btnDetalles = tk.Button(buttonFrame, 
-                                     text="Ver Detalles/Inventario", 
-                                     font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
-                                     bg=styles.COLOR_BOTON_5, 
-                                     fg=styles.COLOR_BLANCO,
-                                     width=20,
-                                     state=tk.DISABLED,
-                                     command=self.abrirDetallesInventario)
-        self.btnDetalles.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Botón Cerrar
-        btnCerrar = tk.Button(buttonFrame, 
-                              text="Cerrar", 
-                              font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
-                              bg=styles.COLOR_TEXTO_MEDIO, 
-                              fg=styles.COLOR_BLANCO,
-                              width=15,
-                              command=self.window.destroy)
-        btnCerrar.pack(side=tk.RIGHT)
-        
-        # Separador
-        separator = tk.Frame(mainFrame, height=2, bg=styles.COLOR_BORDE)
-        separator.pack(fill=tk.X, pady=(0, 10))
-        
-        # Frame para la tabla (Treeview)
-        tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
-        tableFrame.pack(fill=tk.BOTH, expand=True)
-        
-        # Crear Treeview con columnas para materiales RA-PE
-        columns = ("ID", "Nombre", "Marca", "Categoría", "Stock", "Alarma")
-        self.tree = ttk.Treeview(tableFrame, columns=columns, show="headings", height=15)
-        
-        # Configurar columnas
-        column_configs = [
-            ("ID", "ID", 60, "center"),
-            ("Nombre", "Nombre Material", 200, "center"),
-            ("Marca", "Marca", 100, "center"),
-            ("Categoría", "Categoría", 120, "center"),
-            ("Stock", "Stock Total", 80, "center"),
-            ("Alarma", "Alarma Cap", 80, "center")
-        ]
-        
-        for i, (col, heading, width, anchor) in enumerate(column_configs):
-            self.tree.heading(col, text=heading)
-            self.tree.column(col, width=width, anchor=anchor)
-
-        # Configurar estilo para el Treeview
-        style = ttk.Style()
-        style.theme_use('clam')
-        
-        # Configurar estilo global para Treeview
-        style.configure("Treeview",
-                        background=styles.COLOR_FONDO,
-                        foreground=styles.COLOR_TEXTO_OSCURO,
-                        fieldbackground=styles.COLOR_FONDO,
-                        borderwidth=1,
-                        rowheight=25)
-        
-        # Configurar específicamente los headings
-        style.configure("Treeview.Heading", 
-                        background=styles.COLOR_TREEVIEW_HEADING,
-                        foreground=styles.COLOR_TEXTO_OSCURO,
-                        font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
-                        relief="flat",
-                        padding=(5, 5))
-        
-        # Configurar color de selección
-        style.map('Treeview',
-                  background=[('selected', styles.COLOR_TREEVIEW_SELECTION)],
-                  foreground=[('selected', styles.COLOR_TEXTO_OSCURO)])
-        
-        # Configurar colores para filas alternas
-        self.tree.tag_configure('odd', background=styles.COLOR_TREEVIEW_ODD)
-        self.tree.tag_configure('even', background=styles.COLOR_TREEVIEW_EVEN)
-        # Configurar color para stock bajo
-        self.tree.tag_configure('bajo_stock', background='#FFF3CD', foreground=styles.COLOR_TEXTO_OSCURO)
-
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(tableFrame, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        
-        # Layout Treeview y Scrollbar
-        self.tree.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        
-        # Configurar grid para expansión
-        tableFrame.grid_rowconfigure(0, weight=1)
-        tableFrame.grid_columnconfigure(0, weight=1)
-        
-        # Frame para botones inferiores
-        bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
-        bottomFrame.pack(fill=tk.X, pady=(10, 0))
-        
-        # Botón Eliminar
-        self.btnEliminar = tk.Button(bottomFrame, 
-                                     text="Eliminar Material Seleccionado", 
-                                     font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
-                                     bg=styles.COLOR_PELIGRO, 
-                                     fg=styles.COLOR_BLANCO,
-                                     width=25,
-                                     state=tk.DISABLED,
-                                     command=self.eliminarMaterial)
-        self.btnEliminar.pack(side=tk.LEFT, padx=(0, 20))
-        
-        # Evento de selección en Treeview
-        self.tree.bind("<<TreeviewSelect>>", self.onTreeSelect)
-        
-        # Variables para control de selección
-        self.materialSeleccionado = None
-        self.materialNombre = None
+    # ============================================
+    # MÉTODOS PARA BÚSQUEDA
+    # ============================================
     
-    def loadProductos(self):
-        """Carga los materiales RA-PE desde la base de datos"""
-        # Limpiar tabla
+    def on_entry_focus_in(self, event):
+        """Maneja el foco en el campo de búsqueda"""
+        if self.entry_buscar.get() == "Buscar por nombre, marca o categoría...":
+            self.entry_buscar.delete(0, tk.END)
+            self.entry_buscar.config(fg="black")
+    
+    def on_entry_focus_out(self, event):
+        """Maneja la pérdida de foco en el campo de búsqueda"""
+        if not self.entry_buscar.get():
+            self.entry_buscar.insert(0, "Buscar por nombre, marca o categoría...")
+            self.entry_buscar.config(fg="grey")
+    
+    def filtrar_tabla(self, event=None):
+        """Filtra la tabla en base al texto de búsqueda"""
+        texto_busqueda = self.entry_buscar.get().strip().lower()
+        
+        if texto_busqueda == "buscar por nombre, marca o categoría...":
+            texto_busqueda = ""
+        
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Obtener materiales usando vista optimizada
-        materiales = self.db.get_productos_rape_completo()
-        
-        if materiales:
-            # Ordenar por ID para consistencia
-            materiales_ordenados = sorted(materiales, key=lambda x: x['id_productosrape'])
-            
-            for i, material in enumerate(materiales_ordenados):
-                # Determinar tag para fila alternada
-                tag_actual = 'even' if i % 2 == 0 else 'odd'
-                
-                # Verificar si stock está bajo alarma
-                stock_total = material.get('stock_total', 0)
-                alarma_cap = material.get('alarma_cap', 5)
-                if stock_total < alarma_cap:
-                    tag_actual = 'bajo_stock'
-                
-                # Insertar con tag
-                self.tree.insert("", tk.END, 
-                                values=(material['id_productosrape'],
-                                       material['nombre_producto_rape'],
-                                       material['nombre_marca'],
-                                       material['nombre_categoria'],
-                                       stock_total,
-                                       alarma_cap),
-                                tags=(tag_actual,))
-    
-    def onTreeSelect(self, event):
-        """Maneja la selección de un material en el Treeview"""
-        selection = self.tree.selection()
-        if selection:
-            # Habilitar botones de edición, detalles y eliminación
-            self.btnEditar.config(state=tk.NORMAL)
-            self.btnDetalles.config(state=tk.NORMAL)
-            self.btnEliminar.config(state=tk.NORMAL)
-            
-            # Guardar el material seleccionado
-            item = self.tree.item(selection[0])
-            self.materialSeleccionado = item['values'][0]  # ID
-            self.materialNombre = item['values'][1]  # Nombre
+        if texto_busqueda:
+            try:
+                from db import Database
+                db = Database()
+                # Usar método de búsqueda específico para RA-PE
+                materiales_filtrados = db.buscar_productos_rape(texto_busqueda)
+            except Exception as e:
+                print(f"Error en búsqueda: {e}")
+                # Fallback a filtrado local si falla la búsqueda en BD
+                materiales_filtrados = []
+                for material in self.materiales_data:
+                    if (texto_busqueda in material['nombre_producto_rape'].lower() or
+                        texto_busqueda in material.get('nombre_marca', '').lower() or
+                        texto_busqueda in material.get('nombre_categoria', '').lower()):
+                        materiales_filtrados.append(material)
         else:
-            self.btnEditar.config(state=tk.DISABLED)
-            self.btnDetalles.config(state=tk.DISABLED)
-            self.btnEliminar.config(state=tk.DISABLED)
-            self.materialSeleccionado = None
-            self.materialNombre = None
+            materiales_filtrados = self.materiales_data
+        
+        self.mostrar_materiales_en_tabla(materiales_filtrados)
     
-    def abrirAgregarMaterial(self):
-        """Abre ventana para agregar nuevo material"""
+    # ============================================
+    # MÉTODOS PARA CARGA DE DATOS
+    # ============================================
+    
+    def cargar_materiales(self):
+        """Carga materiales desde la base de datos"""
+        try:
+            from db import Database
+            db = Database()
+            self.materiales_data = db.get_productos_rape_completo()
+            self.mostrar_materiales_en_tabla(self.materiales_data)
+        except Exception as e:
+            print(f"Error cargando materiales: {e}")
+            messagebox.showerror("Error", f"No se pudieron cargar los materiales: {e}")
+    
+    def mostrar_materiales_en_tabla(self, materiales):
+        """Muestra materiales en la tabla Treeview"""
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        for i, material in enumerate(materiales):
+            tags = []
+            
+            if i % 2 == 0:
+                tags.append('evenrow')
+            else:
+                tags.append('oddrow')
+            
+            try:
+                stock = float(material.get('stock_total', 0))
+                alarma = float(material.get('alarma_cap', 0))
+                if stock < alarma:
+                    tags.append('alarma')
+            except:
+                pass
+            
+            self.tree.insert("", "end", 
+                           values=(
+                               material['id_productosrape'],
+                               material['nombre_producto_rape'],
+                               material.get('nombre_marca', ''),
+                               material.get('nombre_categoria', ''),
+                               material.get('stock_total', 0),
+                               material.get('alarma_cap', 0)
+                           ),
+                           tags=tuple(tags))
+        
+        # Configurar tags para filas alternas
+        self.tree.tag_configure('evenrow', background='#FFFFFF')
+        self.tree.tag_configure('oddrow', background='#F5F5F5')
+        self.tree.tag_configure('alarma', background='#FFF3CD')
+    
+    # ============================================
+    # MÉTODOS PARA SELECCIÓN
+    # ============================================
+    
+    def on_item_selected(self, event):
+        """Habilita botones cuando se selecciona un item"""
+        seleccionado = self.tree.selection()
+        if seleccionado:
+            self.btn_editar.config(state=tk.NORMAL)
+            self.btn_detalles.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_editar.config(state=tk.DISABLED)
+            self.btn_detalles.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+    
+    # ============================================
+    # MÉTODOS CRUD
+    # ============================================
+    
+    def agregar_material(self):
+        """Abre ventana para agregar material"""
         try:
             from ventanaDetalleMaterialRaPe import VentanaDetalleMaterialRaPe
-            VentanaDetalleMaterialRaPe(self.window, "Agregar Material RA-PE", None, self)
-        except ImportError as e:
-            messagebox.showerror("Error", f"No se pudo abrir formulario de material: {e}")
+            ventana = VentanaDetalleMaterialRaPe(self.window, self.system_name)
+            self.window.wait_window(ventana.window)
+            self.cargar_materiales()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir agregar material: {e}")
     
-    def abrirEditarMaterial(self):
-        """Abre ventana para editar material existente"""
-        if self.materialSeleccionado:
+    def editar_material(self):
+        """Abre ventana para editar material seleccionado"""
+        seleccionado = self.tree.selection()
+        if seleccionado:
+            id_material = self.tree.item(seleccionado[0])['values'][0]
             try:
                 from ventanaDetalleMaterialRaPe import VentanaDetalleMaterialRaPe
-                VentanaDetalleMaterialRaPe(self.window, "Editar Material RA-PE", 
-                                         self.materialSeleccionado, self)
-            except ImportError as e:
-                messagebox.showerror("Error", f"No se pudo abrir formulario de edición: {e}")
-        else:
-            messagebox.showwarning("Selección requerida", 
-                                 "Por favor seleccione un material para editar")
+                ventana = VentanaDetalleMaterialRaPe(self.window, self.system_name, id_material)
+                self.window.wait_window(ventana.window)
+                self.cargar_materiales()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo editar material: {e}")
     
-    def abrirDetallesInventario(self):
-        """Abre ventana para ver detalles del inventario del material"""
-        if self.materialSeleccionado:
+    def ver_detalles(self):
+        """Abre ventana para ver detalles del material"""
+        seleccionado = self.tree.selection()
+        if seleccionado:
+            id_material = self.tree.item(seleccionado[0])['values'][0]
+            nombre_material = self.tree.item(seleccionado[0])['values'][1]
+            
             try:
                 from ventanaDistribucionInventario import VentanaDistribucionInventario
                 
-                # Crear ventana de detalles pasando self como callback
-                ventana_detalles = VentanaDistribucionInventario(
-                    self.window, 
-                    self.materialSeleccionado, 
-                    self.materialNombre, 
-                    sistema="rape",  # Especificar sistema RA-PE
-                    callback_obj=self,
-                    modo="detalles"
+                ventana = VentanaDistribucionInventario(
+                    self.window,                # parent
+                    id_material,                # id_producto
+                    nombre_material,            # nombre_producto
+                    sistema="rape",            # ¡IMPORTANTE: sistema="rape"!
+                    callback_obj=self,          # callback object
+                    modo="detalles"            # mode
                 )
                 
-            except ImportError as e:
-                messagebox.showerror("Error", f"No se pudo abrir detalles de inventario: {e}")
-        else:
-            messagebox.showwarning("Selección requerida", 
-                                 "Por favor seleccione un material para ver detalles")
+            except Exception as e:
+                print(f"Error abriendo detalles: {e}")
+                messagebox.showerror("Error", f"No se pudo ver detalles: {e}")
     
-    def eliminarMaterial(self):
+    def eliminar_material(self):
         """Elimina el material seleccionado"""
-        if not self.materialSeleccionado:
-            return
-        
-        # Confirmar eliminación
-        confirm = messagebox.askyesno("Confirmar eliminación", 
-                                     f"¿Está seguro de eliminar el material '{self.materialNombre}'?\n\n"
-                                     "Esta acción eliminará también todo el inventario asociado.")
-        if not confirm:
-            return
-        
-        try:
-            success, message = self.db.delete_producto_rape(self.materialSeleccionado)
-            if success:
-                messagebox.showinfo("Éxito", message)
-                self.loadProductos()  # Refrescar tabla
-                self.materialSeleccionado = None
-                self.materialNombre = None
-                self.btnEditar.config(state=tk.DISABLED)
-                self.btnDetalles.config(state=tk.DISABLED)
-                self.btnEliminar.config(state=tk.DISABLED)
-            else:
-                messagebox.showwarning("Error al eliminar", message)
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al eliminar material: {e}")
+        seleccionado = self.tree.selection()
+        if seleccionado:
+            id_material = self.tree.item(seleccionado[0])['values'][0]
+            nombre_material = self.tree.item(seleccionado[0])['values'][1]
+            
+            respuesta = messagebox.askyesno(
+                "Confirmar Eliminación",
+                f"¿Está seguro de eliminar el material:\n{nombre_material}?\n\n"
+                "Esta acción eliminará también todo su inventario asociado."
+            )
+            
+            if respuesta:
+                try:
+                    from db import Database
+                    db = Database()
+                    success, mensaje = db.delete_producto_rape(id_material)
+                    
+                    if success:
+                        messagebox.showinfo("Éxito", mensaje)
+                        self.cargar_materiales()
+                    else:
+                        messagebox.showerror("Error", mensaje)
+                except Exception as e:
+                    messagebox.showerror("Error", f"No se pudo eliminar material: {e}")

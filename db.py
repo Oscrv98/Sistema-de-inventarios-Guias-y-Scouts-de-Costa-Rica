@@ -691,6 +691,33 @@ class Database:
         except Exception as e:
             print(f"Error obteniendo datos para exportación RA-PE: {e}")
             return {'resumen': [], 'detalle': []}
+        
+    
+    def buscar_productos_tienda(self, texto):
+        """Búsqueda optimizada de productos TIENDA"""
+        query = """
+        SELECT * FROM vista_productos_tienda_completa 
+        WHERE LOWER(nombre_producto_tienda) LIKE %s 
+        OR LOWER(nombre_marca) LIKE %s 
+        OR LOWER(nombre_categoria) LIKE %s
+        ORDER BY nombre_producto_tienda
+        """
+        texto_busqueda = f"%{texto.lower()}%"
+        return self.execute_query(query, (texto_busqueda, texto_busqueda, texto_busqueda), fetch=True)
+
+    def buscar_productos_rape(self, texto):
+        """Búsqueda optimizada de materiales RA-PE"""
+        query = """
+        SELECT * FROM vista_productos_rape_completa 
+        WHERE LOWER(nombre_producto_rape) LIKE %s 
+        OR LOWER(nombre_marca) LIKE %s 
+        OR LOWER(nombre_categoria) LIKE %s
+        ORDER BY nombre_producto_rape
+        """
+        texto_busqueda = f"%{texto.lower()}%"
+        return self.execute_query(query, (texto_busqueda, texto_busqueda, texto_busqueda), fetch=True)
+
+
     # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
     # ============================================
     
