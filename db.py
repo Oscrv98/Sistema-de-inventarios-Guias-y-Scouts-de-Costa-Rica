@@ -641,6 +641,56 @@ class Database:
             print(f"Error obteniendo datos para exportación TIENDA: {e}")
             return {'resumen': [], 'detalle': []}
         
+        
+    def get_export_data_rape(self):
+        """Obtiene todos los datos necesarios para exportar RA-PE a Excel"""
+        try:
+            # Hoja 1: Resumen de materiales (vista completa)
+            query_resumen = """
+            SELECT 
+                nombre_producto_rape as "Material",
+                nombre_marca as "Marca",
+                nombre_categoria as "Categoría",
+                alarma_cap as "Nivel Alarma",
+                stock_total as "Stock Total",
+                num_ubicaciones as "Ubicaciones",
+                lista_edificios as "Edificios"
+            FROM vista_productos_rape_completa 
+            ORDER BY nombre_producto_rape
+            """
+            
+            resumen_data = self.execute_query(query_resumen, fetch=True)
+            
+            # Hoja 2: Detalle de inventario por edificio
+            query_detalle = """
+            SELECT 
+                p.nombre_producto_rape as "Material",
+                e.nombre_edificio as "Edificio",
+                i.cantidad as "Cantidad",
+                i.estante as "Estante",
+                i.lugar as "Lugar",
+                i.etiqueta as "Etiqueta",
+                COALESCE(m.nombre_marca, 'Sin marca') as "Marca",
+                COALESCE(c.nombre_categoria, 'Sin categoría') as "Categoría"
+            FROM ProductsRaPe p
+            LEFT JOIN InvRaPe i ON p.id_productosrape = i.id_productosrape
+            LEFT JOIN edificio e ON i.id_edificio = e.id_edificio
+            LEFT JOIN marca m ON p.id_marca = m.id_marca
+            LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
+            WHERE e.id_inventario = 2 OR e.id_inventario IS NULL  -- Solo edificios RA-PE
+            ORDER BY p.nombre_producto_rape, e.nombre_edificio
+            """
+            
+            detalle_data = self.execute_query(query_detalle, fetch=True)
+            
+            return {
+                'resumen': resumen_data if resumen_data else [],
+                'detalle': detalle_data if detalle_data else []
+            }
+            
+        except Exception as e:
+            print(f"Error obteniendo datos para exportación RA-PE: {e}")
+            return {'resumen': [], 'detalle': []}
     # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
     # ============================================
     

@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from baseSystem import BaseSystem
 import styles
+from datetime import datetime
+import os
 
 class TiendaSystem(BaseSystem):
     def __init__(self, root, return_callback, db_status="Conectado"):
@@ -72,7 +74,7 @@ class TiendaSystem(BaseSystem):
                               width=8,
                               relief="flat",
                               cursor=styles.CURSOR_BOTON,
-                              command=self.update_alarms_tienda)  # Conectado a la función
+                              command=self.update_alarms_tienda)
         btn_update.grid(row=1, column=2, rowspan=2, 
                        padx=(0, styles.PADDING_X), pady=2)
     
@@ -103,15 +105,13 @@ class TiendaSystem(BaseSystem):
             
             # Cambiar colores según prioridad
             if agotados > 0:
-                self.lbl_agotados.config(fg=styles.COLOR_PELIGRO)  # Rojo para agotados
+                self.lbl_agotados.config(fg=styles.COLOR_PELIGRO)
             else:
-                # Volver al color original si no hay agotados
                 self.lbl_agotados.config(fg=styles.COLOR_AGOTADO)
             
             if reponer > 0:
-                self.lbl_reponer.config(fg=styles.COLOR_ADVERTENCIA)  # Amarillo/Naranja para reponer
+                self.lbl_reponer.config(fg=styles.COLOR_ADVERTENCIA)
             else:
-                # Volver al color original si no hay por reponer
                 self.lbl_reponer.config(fg=styles.COLOR_REPONER)
             
             # Debug en consola
@@ -122,13 +122,8 @@ class TiendaSystem(BaseSystem):
             
         except Exception as e:
             print(f"Error actualizando alarmas TIENDA: {e}")
-            # Mostrar error en la interfaz
             self.lbl_agotados.config(text="Error cargando alarmas", fg=styles.COLOR_PELIGRO)
             self.lbl_reponer.config(text="Click en Actualizar", fg=styles.COLOR_ADVERTENCIA)
-    
-    # ============================================
-    # FUNCIONES ESPECÍFICAS DE TIENDA
-    # ============================================
     
     def open_productos_tienda(self):
         """Abre la ventana de gestión de productos TIENDA"""
@@ -142,11 +137,13 @@ class TiendaSystem(BaseSystem):
             messagebox.showerror("Error", 
                             f"Error al abrir productos TIENDA: {e}")
     
-    # En tiendaDef.py, reemplazar la función exportar_excel_tienda:
-
     def exportar_excel_tienda(self):
         """Exporta datos de TIENDA a Excel con formato profesional"""
         try:
+            # Importar openpyxl DENTRO de la función
+            import openpyxl
+            from openpyxl.styles import Font, Alignment, PatternFill
+            
             from db import Database
             
             # Obtener datos
@@ -218,7 +215,7 @@ class TiendaSystem(BaseSystem):
                             except:
                                 pass
                 
-                # ANCHOS FIJOS PROFESIONALES - SIMPLIFICADO
+                # ANCHOS FIJOS PROFESIONALES
                 column_widths = {
                     'A': 35,  # Producto
                     'B': 20,  # Marca
@@ -326,10 +323,8 @@ class TiendaSystem(BaseSystem):
     def show_alarm_details_tienda(self):
         """Abre ventana para ver detalles de alarmas TIENDA"""
         try:
-            # Intentar importar ventana específica de alarmas
             from ventanaAlarmasTienda import VentanaAlarmasTienda
             VentanaAlarmasTienda(self.root, self.system_name)
         except ImportError as e:
             print(f"ventanaAlarmasTienda no encontrada: {e}")
-            # Si no existe, abrir la ventana principal de productos
             self.open_productos_tienda()
