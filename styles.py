@@ -7,19 +7,19 @@ Centraliza colores, fuentes y tamaños
 # PALETA DE COLORES
 # ============================================
 
-# Colores principales por sistema
-COLOR_TIENDA = "#27ae60"      # Verde
-COLOR_RAPE = "#2980b9"        # Azul
+# Colores principales por sistema (Actualizados según paleta Scouts)
+COLOR_TIENDA = "#021DA3"      # Azul (HEX: 021DA3) - Color distintivo
+COLOR_RAPE = "#04bc99"        # Verde turquesa (HEX: 04bc99) - Color distintivo
 
 # Colores de estado
-COLOR_PELIGRO = "#e74c3c"     # Rojo
-COLOR_ADVERTENCIA = "#f39c12" # Naranja
-COLOR_EXITO = "#2ecc71"       # Verde éxito
-COLOR_INFO = "#3498db"        # Azul info
+COLOR_PELIGRO = "#e74c3c"     # Rojo (mantenido)
+COLOR_ADVERTENCIA = "#f39c12" # Naranja (mantenido)
+COLOR_EXITO = "#2ecc71"       # Verde éxito (mantenido)
+COLOR_INFO = "#3498db"        # Azul info (mantenido)
 
 # Colores neutrales
-COLOR_FONDO = "#f0f0f0"
-COLOR_FONDO_OSCURO = "#2c3e50"
+COLOR_FONDO = "#ffffff"       # Blanco (como solicitado)
+COLOR_FONDO_OSCURO = "#2c1261" # Morado primario (HEX: 2c1261)
 COLOR_TEXTO_OSCURO = "#2c3e50"
 COLOR_TEXTO_MEDIO = "#7f8c8d"
 COLOR_TEXTO_CLARO = "#95a5a6"
@@ -33,22 +33,28 @@ COLOR_AGOTADO = "#dc3545"
 COLOR_REPONER = "#fd7e14"
 
 # Colores para botones del menú (8 colores diferentes)
-COLOR_BOTON_1 = "#2ecc71"  # Verde
-COLOR_BOTON_2 = "#3498db"  # Azul
-COLOR_BOTON_3 = "#9b59b6"  # Púrpura
-COLOR_BOTON_4 = "#e67e22"  # Naranja
-COLOR_BOTON_5 = "#1abc9c"  # Turquesa
-COLOR_BOTON_6 = "#34495e"  # Gris oscuro
-COLOR_BOTON_7 = "#7f8c8d"  # Gris
-COLOR_BOTON_8 = "#95a5a6"  # Gris claro
+# Actualizados con colores de la paleta Scouts
+COLOR_BOTON_1 = "#2c1261"      # Morado primario
+COLOR_BOTON_2 = "#ed1a39"      # Rojo primario
+COLOR_BOTON_3 = "#021DA3"      # Azul (TIENDA)
+COLOR_BOTON_4 = "#04bc99"      # Verde turquesa (RAPE)
+COLOR_BOTON_5 = "#ffa400"      # Naranja (secundario)
+COLOR_BOTON_6 = "#e8197b"      # Rosa (secundario)
+COLOR_BOTON_7 = "#00365f"      # Azul noche (secundario)
+COLOR_BOTON_8 = "#633510"      # Marrón (secundario)
 
 # ============================================
-# FUENTES
+# FUENTES (Actualizadas según guía Scouts)
 # ============================================
 
-FUENTE_PRINCIPAL = "Arial"
-FUENTE_SECUNDARIA = "Segoe UI"
-FUENTE_MONO = "Consolas"
+# Según PDF: Para títulos -> Arial Bold, Avenir Black/Heavy
+FUENTE_PRINCIPAL = "Arial"      # Para títulos (equivalente Avenir Black/Heavy)
+
+# Según PDF: Para subtítulos -> Arial Bold Italic, Avenir Medium
+FUENTE_SECUNDARIA = "Arial"     # Para subtítulos (equivalente Avenir Medium)
+
+# Según PDF: Para cuerpo -> Arial Regular, Avenir Book/Light
+FUENTE_MONO = "Consolas"        # Mantenido para código/monospace
 
 # ============================================
 # TAMAÑOS DE FUENTE
@@ -62,7 +68,7 @@ TAMANO_PEQUENO = 9
 TAMANO_MUY_PEQUENO = 8
 
 # ============================================
-# PESOS DE FUENTE
+# PESOS DE FUENTE (Actualizados según guía)
 # ============================================
 
 PESO_NORMAL = "normal"
@@ -101,7 +107,7 @@ ALTO_BOTON_MENU = 4
 # ============================================
 
 # Colores para Treeview
-COLOR_TREEVIEW_HEADING = "#46409C"  # Gris claro para encabezados
+COLOR_TREEVIEW_HEADING = "#2c1261"  # Morado primario para encabezados
 COLOR_TREEVIEW_ODD = "#f9f9f9"      # Fondo filas impares  
 COLOR_TREEVIEW_EVEN = "#A7A4A4"     # Fondo filas pares
 COLOR_TREEVIEW_SELECTION = "#d4e6f1"  # Color al seleccionar fila

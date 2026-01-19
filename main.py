@@ -166,7 +166,7 @@ class MainApp:
                               relief=styles.BORDE_RELIEF, 
                               bd=styles.BORDE_GROSOR,
                               cursor=styles.CURSOR_BOTON,
-                              command=self.open_tienda_system)
+                              command=self.open_tienda_login)
         btn_tienda.grid(row=0, column=0, 
                        padx=styles.PADDING_X, pady=10, sticky="nsew")
         
@@ -175,13 +175,13 @@ class MainApp:
                             text="SISTEMA RA-PE", 
                             font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_ENCABEZADO, styles.PESO_NEGRITA),
                             bg=styles.COLOR_RAPE, 
-                            fg=styles.COLOR_BLANCO,
+                              fg=styles.COLOR_BLANCO,
                             width=styles.ANCHO_BOTON_SISTEMA, 
                             height=styles.ALTO_BOTON_SISTEMA,
                             relief=styles.BORDE_RELIEF, 
                             bd=styles.BORDE_GROSOR,
                             cursor=styles.CURSOR_BOTON,
-                            command=self.open_rape_system)
+                            command=self.open_rape_login)
         btn_rape.grid(row=0, column=1, 
                      padx=styles.PADDING_X, pady=10, sticky="nsew")
         
@@ -244,15 +244,134 @@ class MainApp:
                              fg=styles.COLOR_TEXTO_CLARO)
         info_label.pack(side=tk.RIGHT, padx=(0, 10))
     
+    def open_tienda_login(self):
+        """Muestra ventana de login para TIENDA"""
+        self.show_login_window("TIENDA", self.open_tienda_system)
+    
+    def open_rape_login(self):
+        """Muestra ventana de login para RA-PE"""
+        self.show_login_window("RAPE", self.open_rape_system)
+    
+    def show_login_window(self, sistema, success_callback):
+        """Muestra ventana emergente de login"""
+        login_window = tk.Toplevel(self.root)
+        login_window.title(f"Acceso Sistema {sistema}")
+        login_window.geometry("400x250")
+        login_window.configure(bg=styles.COLOR_FONDO)
+        login_window.resizable(False, False)
+        
+        # Centrar ventana
+        login_window.transient(self.root)
+        login_window.grab_set()
+        
+        screen_width = login_window.winfo_screenwidth()
+        screen_height = login_window.winfo_screenheight()
+        x = (screen_width // 2) - (400 // 2)
+        y = (screen_height // 2) - (250 // 2)
+        login_window.geometry(f"400x250+{x}+{y}")
+        
+        # Frame principal
+        main_frame = tk.Frame(login_window, bg=styles.COLOR_FONDO, padx=30, pady=20)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Título
+        color_sistema = styles.COLOR_TIENDA if sistema == "TIENDA" else styles.COLOR_RAPE
+        tk.Label(main_frame, 
+                text=f"ACCESO SISTEMA {sistema}", 
+                font=(styles.FUENTE_PRINCIPAL, 16, styles.PESO_NEGRITA),
+                bg=styles.COLOR_FONDO, 
+                fg=color_sistema).pack(pady=(0, 20))
+        
+        # Información de usuario
+        tk.Label(main_frame, 
+                text=f"Usuario: {sistema}", 
+                font=(styles.FUENTE_PRINCIPAL, 12, styles.PESO_NEGRITA),
+                bg=styles.COLOR_FONDO, 
+                fg=styles.COLOR_TEXTO_OSCURO).pack(pady=(0, 5))
+        
+        tk.Label(main_frame, 
+                text="Ingrese la contraseña:", 
+                font=(styles.FUENTE_PRINCIPAL, 11),
+                bg=styles.COLOR_FONDO, 
+                fg=styles.COLOR_TEXTO_MEDIO).pack(pady=(10, 5))
+        
+        # Campo de contraseña (con asteriscos)
+        password_var = tk.StringVar()
+        password_entry = tk.Entry(main_frame, 
+                                 textvariable=password_var,
+                                 font=(styles.FUENTE_PRINCIPAL, 12),
+                                 show="*",
+                                 width=25,
+                                 relief=tk.SOLID,
+                                 bd=1)
+        password_entry.pack(pady=5, ipady=5)
+        password_entry.focus_set()
+        
+        # Función para verificar login
+        def verify_login():
+            password = password_var.get().strip()
+            
+            if not password:
+                messagebox.showwarning("Contraseña requerida", "Por favor ingrese la contraseña")
+                return
+            
+            try:
+                db = Database()
+                usuario_info = db.verify_login(sistema, password)
+                
+                if usuario_info:
+                    print(f"Login exitoso para usuario: {sistema}")
+                    login_window.destroy()
+                    success_callback()
+                else:
+                    messagebox.showerror("Acceso denegado", "Contraseña incorrecta")
+                    password_var.set("")
+                    password_entry.focus_set()
+                    
+            except Exception as e:
+                messagebox.showerror("Error", f"Error verificando credenciales: {e}")
+        
+        # Botón de acceso
+        btn_access = tk.Button(main_frame, 
+                              text="Acceder", 
+                              font=(styles.FUENTE_PRINCIPAL, 11, styles.PESO_NEGRITA),
+                              bg=color_sistema, 
+                              fg=styles.COLOR_BLANCO,
+                              width=15,
+                              relief=styles.BORDE_RELIEF,
+                              bd=styles.BORDE_GROSOR,
+                              cursor=styles.CURSOR_BOTON,
+                              command=verify_login)
+        btn_access.pack(pady=15)
+        
+        # Botón cancelar
+        btn_cancel = tk.Button(main_frame, 
+                              text="Cancelar", 
+                              font=(styles.FUENTE_PRINCIPAL, 10),
+                              bg=styles.COLOR_TEXTO_CLARO, 
+                              fg=styles.COLOR_BLANCO,
+                              width=10,
+                              relief=styles.BORDE_RELIEF,
+                              bd=styles.BORDE_GROSOR,
+                              cursor=styles.CURSOR_BOTON,
+                              command=login_window.destroy)
+        btn_cancel.pack()
+        
+        # Permitir Enter para enviar
+        login_window.bind('<Return>', lambda e: verify_login())
+        
+        # Esperar a que se cierre la ventana
+        self.root.wait_window(login_window)
+    
     def open_tienda_system(self):
-        """Abre el sistema de Tienda pasando el estado de conexión"""
-        print("Abriendo Sistema Tienda...")
+        """Abre el sistema de Tienda después de login exitoso"""
+        print("Acceso concedido - Abriendo Sistema Tienda...")
         self.clear_window()
         TiendaSystem(self.root, self.show_system_selection, self.db_status)
     
     def open_rape_system(self):
-        """Abre el sistema de RA-PE pasando el estado de conexión"""
-        print("Abriendo Sistema RA-PE...")
+        """Abre el sistema de RA-PE después de login exitoso"""
+        print("Acceso concedido - Abriendo Sistema RA-PE...")
         self.clear_window()
         RAPESystem(self.root, self.show_system_selection, self.db_status)
     

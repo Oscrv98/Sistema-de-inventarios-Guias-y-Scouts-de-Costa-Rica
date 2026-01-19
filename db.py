@@ -717,7 +717,18 @@ class Database:
         texto_busqueda = f"%{texto.lower()}%"
         return self.execute_query(query, (texto_busqueda, texto_busqueda, texto_busqueda), fetch=True)
 
-
+    def verify_login(self, usuario, password):
+        """Verificar credenciales de usuario"""
+        try:
+            query = """
+            SELECT usuario, rol FROM usuarios 
+            WHERE usuario = %s AND password = %s
+            """
+            result = self.execute_query(query, (usuario, password), fetch=True)
+            return result[0] if result else None
+        except Exception as e:
+            print(f"Error verificando login: {e}")
+            return None
     # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
     # ============================================
     
