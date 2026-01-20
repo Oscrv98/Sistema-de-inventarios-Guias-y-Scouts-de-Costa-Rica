@@ -585,12 +585,10 @@ class Database:
         ORDER BY va.estado DESC, va.cantidad_total ASC
         """
         return self.execute_query(query, fetch=True)
-
-    # En db.py, añadir al final de la clase Database:
+    
     def get_export_data_tienda(self):
         """Obtiene todos los datos necesarios para exportar TIENDA a Excel"""
         try:
-            # Hoja 1: Resumen de productos (vista completa)
             query_resumen = """
             SELECT 
                 nombre_producto_tienda as "Producto",
@@ -606,11 +604,8 @@ class Database:
                 lista_edificios as "Edificios"
             FROM vista_productos_tienda_completa 
             ORDER BY nombre_producto_tienda
-            """
-            
+            """     
             resumen_data = self.execute_query(query_resumen, fetch=True)
-            
-            # Hoja 2: Detalle de inventario por edificio
             query_detalle = """
             SELECT 
                 p.nombre_producto_tienda as "Producto",
@@ -645,7 +640,6 @@ class Database:
     def get_export_data_rape(self):
         """Obtiene todos los datos necesarios para exportar RA-PE a Excel"""
         try:
-            # Hoja 1: Resumen de materiales (vista completa)
             query_resumen = """
             SELECT 
                 nombre_producto_rape as "Material",
@@ -661,7 +655,6 @@ class Database:
             
             resumen_data = self.execute_query(query_resumen, fetch=True)
             
-            # Hoja 2: Detalle de inventario por edificio
             query_detalle = """
             SELECT 
                 p.nombre_producto_rape as "Material",
