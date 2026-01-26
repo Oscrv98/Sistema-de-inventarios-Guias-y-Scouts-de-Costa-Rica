@@ -20,13 +20,13 @@ class VentanaDetalleProductoTienda:
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(titulo)
-        self.window.geometry("600x550")
+        self.window.geometry("600x650")
         self.window.configure(bg=styles.COLOR_FONDO)
         self.window.transient(parent)
         self.window.grab_set()
         
         # Centrar ventana
-        self.centerWindow(600, 550)
+        self.centerWindow(600, 650)
         
         # Crear interfaz
         self.createWidgets()
