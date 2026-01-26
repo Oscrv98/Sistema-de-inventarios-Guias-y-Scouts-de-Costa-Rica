@@ -20,7 +20,7 @@ class VentanaDetalleMaterialRaPe:
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(titulo)
-        self.window.geometry("600x550")  # ✅ CORREGIDO: Igual que TIENDA
+        self.window.geometry("600x550")  
         self.window.configure(bg=styles.COLOR_FONDO)
         self.window.transient(parent)
         self.window.grab_set()

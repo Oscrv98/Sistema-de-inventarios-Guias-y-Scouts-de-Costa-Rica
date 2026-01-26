@@ -150,11 +150,7 @@ class VentanaProductosTienda:
                        padding=(5, 5))
         
         # TERCER INTENTO: Si lo anterior no funciona, usar map
-        style.map('Treeview.Heading',
-                 background=[('active', styles.COLOR_TREEVIEW_HEADING),
-                            ('!active', styles.COLOR_TREEVIEW_HEADING)],
-                 foreground=[('active', styles.COLOR_BLANCO),
-                            ('!active', styles.COLOR_BLANCO)])
+       
         
         # Crear Treeview normal
         self.tree = ttk.Treeview(table_frame,

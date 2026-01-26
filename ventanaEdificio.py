@@ -19,7 +19,7 @@ class VentanaEdificio:
         self.window.geometry("1000x700")
         self.window.minsize(1000, 700) 
         self.window.maxsize(1000, 700)  
-        self.window.configure(bg=styles.COLOR_FONDO)
+        self.window.configure(bg=styles.COLOR_FONDO_OSCURO)
         self.window.transient(parent)
         self.window.grab_set()
         
@@ -41,19 +41,19 @@ class VentanaEdificio:
     def createWidgets(self):
         """Crea todos los widgets de la ventana principal"""
         # Frame principal
-        mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
+        mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO_OSCURO, padx=20, pady=20)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
         # Título
         title = tk.Label(mainFrame, 
                         text="GESTIÓN DE EDIFICIOS", 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
-                        bg=styles.COLOR_FONDO, 
-                        fg=styles.COLOR_TEXTO_OSCURO)
+                        bg=styles.COLOR_FONDO_OSCURO, 
+                        fg=styles.COLOR_BLANCO)
         title.pack(pady=(0, 20))
         
         # Frame para botones de acción principales
-        buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         buttonFrame.pack(fill=tk.X, pady=(0, 15))
         
         # Botón Agregar Edificio
@@ -122,7 +122,7 @@ class VentanaEdificio:
         # Configurar específicamente los headings
         style.configure("Treeview.Heading", 
                         background=styles.COLOR_TREEVIEW_HEADING,
-                        foreground=styles.COLOR_TEXTO_OSCURO,
+                        foreground=styles.COLOR_BLANCO,
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                         relief="flat",
                         padding=(5, 5))
@@ -149,7 +149,7 @@ class VentanaEdificio:
         tableFrame.grid_columnconfigure(0, weight=1)
         
         # Frame para botones inferiores
-        bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         bottomFrame.pack(fill=tk.X, pady=(10, 0))
         
         # Botón Eliminar

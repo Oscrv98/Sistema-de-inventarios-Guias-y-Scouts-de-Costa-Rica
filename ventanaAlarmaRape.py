@@ -17,13 +17,13 @@ class VentanaAlarmasRaPe:
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(f"Alarmas de Materiales RA-PE - {systemName}")
-        self.window.geometry("1200x700")
-        self.window.configure(bg=styles.COLOR_FONDO)
+        self.window.geometry("1300x900")
+        self.window.configure(bg=styles.COLOR_FONDO_OSCURO)
         self.window.transient(parent)
         self.window.grab_set()
         
         # Centrar ventana
-        self.centerWindow(1200, 700)
+        self.centerWindow(1300, 900)
         
         # Crear interfaz
         self.createWidgets()
@@ -40,19 +40,19 @@ class VentanaAlarmasRaPe:
     def createWidgets(self):
         """Crea todos los widgets de la ventana"""
         # Frame principal
-        mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
+        mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO_OSCURO, padx=20, pady=20)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
         # Título específico para RA-PE
         title = tk.Label(mainFrame, 
                         text="ALARMAS DE MATERIALES RA-PE - MATERIALES CON STOCK BAJO", 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
-                        bg=styles.COLOR_FONDO, 
+                        bg=styles.COLOR_FONDO_OSCURO, 
                         fg=styles.COLOR_PELIGRO)
         title.pack(pady=(0, 15))
         
         # Leyenda de colores específica para RA-PE
-        legendFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        legendFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         legendFrame.pack(fill=tk.X, pady=(0, 15))
         
         tk.Label(legendFrame, 
@@ -73,8 +73,8 @@ class VentanaAlarmasRaPe:
         infoLabel = tk.Label(mainFrame,
                             text="Esta vista muestra solo materiales RA-PE con stock por debajo del nivel mínimo de alarma",
                             font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_PEQUENO),
-                            bg=styles.COLOR_FONDO,
-                            fg=styles.COLOR_TEXTO_MEDIO)
+                            bg=styles.COLOR_FONDO_OSCURO,
+                            fg=styles.COLOR_BLANCO)
         infoLabel.pack(pady=(0, 10))
         
         # Separador
@@ -82,7 +82,7 @@ class VentanaAlarmasRaPe:
         separator.pack(fill=tk.X, pady=(0, 10))
         
         # Frame para la tabla (Treeview) - COLUMNAS ESPECÍFICAS PARA RA-PE
-        tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         tableFrame.pack(fill=tk.BOTH, expand=True)
         
         # Columnas específicas para RA-PE (sin precios)
@@ -120,7 +120,7 @@ class VentanaAlarmasRaPe:
         
         style.configure("Treeview.Heading", 
                         background=styles.COLOR_TREEVIEW_HEADING,
-                        foreground=styles.COLOR_TEXTO_OSCURO,
+                        foreground=styles.COLOR_BLANCO,
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                         relief="flat",
                         padding=(5, 5))
@@ -146,7 +146,7 @@ class VentanaAlarmasRaPe:
         tableFrame.grid_columnconfigure(0, weight=1)
         
         # Frame para botones
-        bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
+        bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         bottomFrame.pack(fill=tk.X, pady=(20, 0))
         
         # Botón Ver Detalles RA-PE

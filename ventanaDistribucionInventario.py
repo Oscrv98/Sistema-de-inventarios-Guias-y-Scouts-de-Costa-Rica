@@ -142,7 +142,7 @@ class VentanaDistribucionInventario:
         # Configurar específicamente los headings
         style.configure("Treeview.Heading", 
                         background=styles.COLOR_TREEVIEW_HEADING,
-                        foreground=styles.COLOR_TEXTO_OSCURO,
+                        foreground=styles.COLOR_BLANCO,
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                         relief="flat",
                         padding=(5, 5))
@@ -369,13 +369,13 @@ class VentanaEditarRegistroInventario:
         # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(f"Editar Registro de Inventario")
-        self.window.geometry("500x400")
+        self.window.geometry("500x700")
         self.window.configure(bg=styles.COLOR_FONDO)
         self.window.transient(parent)
         self.window.grab_set()
         
         # Centrar ventana
-        self.centerWindow(500, 400)
+        self.centerWindow(500, 700)
         
         # Crear interfaz
         self.createWidgets()
