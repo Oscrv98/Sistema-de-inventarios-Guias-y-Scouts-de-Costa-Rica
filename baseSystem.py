@@ -77,14 +77,14 @@ class BaseSystem:
         system_label.pack(side=tk.RIGHT, padx=(0, 10), pady=8)
     
     def create_header(self, right_button_text=None, right_button_command=None):
-        """Crea el encabezado común - VERSIÓN ORIGINAL SIN LOGO"""
+        """Crea el encabezado común CON BOTÓN DE EXPORTAR COMPACTO CON EMOJI MÁS GRANDE"""
         header_frame = tk.Frame(self.main_frame,
                             bg=self.system_color,
                             height=70)
         header_frame.pack(fill=tk.X, padx=10, pady=0)
         header_frame.pack_propagate(False)
         
-        # SOLO TÍTULO - limpio y simple
+        # TÍTULO DEL SISTEMA
         title = tk.Label(header_frame,
                         text=f"SISTEMA {self.system_name}",
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
@@ -92,20 +92,59 @@ class BaseSystem:
                         fg=styles.COLOR_BLANCO)
         title.pack(side=tk.LEFT, padx=20, pady=15)
         
-        # Botón derecho (si existe)
+        # Botón derecho: EXPORTAR EXCEL compacto con emoji más grande
         if right_button_text:
-            btn_right = tk.Button(header_frame,
+            # Crear un Frame que actúe como botón (para poder tener diferentes fuentes)
+            btn_frame = tk.Frame(header_frame,
+                            bg=styles.COLOR_BLANCO,
+                            relief=tk.FLAT,
+                            bd=0)
+            btn_frame.pack(side=tk.RIGHT, padx=20, pady=15)
+            
+            # Configurar cursor de mano
+            btn_frame.config(cursor="hand2")
+            
+            # Emoji con fuente GRANDE
+            emoji_label = tk.Label(btn_frame,
+                                text="📥",
+                                font=("Segoe UI Emoji", 18),  # Más grande
+                                bg=styles.COLOR_BLANCO,
+                                fg=self.system_color)
+            emoji_label.pack(side=tk.LEFT, padx=(10, 5))
+            
+            # Texto con fuente normal
+            text_label = tk.Label(btn_frame,
                                 text=right_button_text,
                                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                                 bg=styles.COLOR_BLANCO,
-                                fg=self.system_color,
-                                relief=tk.FLAT,
-                                bd=0,
-                                cursor=styles.CURSOR_BOTON,
-                                command=right_button_command,
-                                activebackground=styles.COLOR_BLANCO,
-                                activeforeground=self.system_color)
-            btn_right.pack(side=tk.RIGHT, padx=20, pady=15, ipadx=10, ipady=5)
+                                fg=self.system_color)
+            text_label.pack(side=tk.LEFT, padx=(0, 10))
+            
+            # Hacer que todo el frame sea clickeable
+            def on_click(e=None):
+                right_button_command()
+            
+            btn_frame.bind("<Button-1>", on_click)
+            emoji_label.bind("<Button-1>", on_click)
+            text_label.bind("<Button-1>", on_click)
+            
+            # Efecto hover (cambia color al pasar el mouse)
+            def on_enter(e):
+                btn_frame.config(bg=styles.COLOR_FONDO_GRIS)
+                emoji_label.config(bg=styles.COLOR_FONDO_GRIS)
+                text_label.config(bg=styles.COLOR_FONDO_GRIS)
+            
+            def on_leave(e):
+                btn_frame.config(bg=styles.COLOR_BLANCO)
+                emoji_label.config(bg=styles.COLOR_BLANCO)
+                text_label.config(bg=styles.COLOR_BLANCO)
+            
+            btn_frame.bind("<Enter>", on_enter)
+            btn_frame.bind("<Leave>", on_leave)
+            emoji_label.bind("<Enter>", on_enter)
+            emoji_label.bind("<Leave>", on_leave)
+            text_label.bind("<Enter>", on_enter)
+            text_label.bind("<Leave>", on_leave)
 
     def create_menu_container(self):
         """Crea el contenedor para el menú con distribución 2x2 MEJORADA"""
@@ -148,74 +187,113 @@ class BaseSystem:
         self.create_menu_buttons()
     
     def create_menu_buttons(self):
-        """Crea los botones del menú en distribución 2x2"""
+        """Crea los botones del menú en distribución 2x2 con emojis centrados"""
         # Configurar grid para 2x2
         for i in range(2):
             self.inner_frame.grid_columnconfigure(i, weight=1)
             self.inner_frame.grid_rowconfigure(i+1, weight=1)
         
-        # Determinar texto del primer botón según sistema
-        productos_text = "MATERIALES RA-PE" if self.system_name == "RA-PE" else "PRODUCTOS TIENDA"
+        # Determinar texto y EMOJI según sistema
+        if self.system_name == "RA-PE":
+            productos_text = "MATERIALES RA-PE"
+            producto_emoji = "📦"  # Caja para RA-PE
+        else:
+            productos_text = "PRODUCTOS TIENDA"
+            producto_emoji = "🛍️"  # Bolsa de compras para Tienda
         
-        # Botón 1: Productos/Materiales (Morado oscuro)
-        self.btn_productos = tk.Button(self.inner_frame, 
-                                    text=productos_text,
-                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
-                                    bg=styles.COLOR_FONDO_OSCURO,  # ← CAMBIADO a morado oscuro
-                                    fg=styles.COLOR_BLANCO,
-                                    relief=tk.FLAT,
-                                    bd=0,
-                                    cursor=styles.CURSOR_BOTON,
-                                    command=self.open_productos,
-                                    activebackground=styles.COLOR_FONDO_OSCURO,
-                                    activeforeground=styles.COLOR_BLANCO)
-        self.btn_productos.grid(row=1, column=0, padx=(0, 7), pady=(0, 7), sticky="nsew")
-        
-        # Botón 2: EDIFICIOS (Color del sistema)
-        self.btn_edificios = tk.Button(self.inner_frame, 
-                                    text="EDIFICIOS", 
-                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
-                                    bg=self.system_color,  # ← CAMBIADO a color del sistema
-                                    fg=styles.COLOR_BLANCO,
-                                    relief=tk.FLAT,
-                                    bd=0,
-                                    cursor=styles.CURSOR_BOTON,
-                                    command=self.openEdificiosWindow,
-                                    activebackground=self.system_color,
-                                    activeforeground=styles.COLOR_BLANCO)
-        self.btn_edificios.grid(row=1, column=1, padx=(7, 0), pady=(0, 7), sticky="nsew")
-        
-        # Botón 3: MARCAS (Morado oscuro)
-        self.btn_marcas = tk.Button(self.inner_frame, 
-                                text="MARCAS", 
+        # FUNCIÓN PARA CREAR BOTONES CON CONTENIDO CENTRADO
+        def create_button_with_large_emoji(parent, emoji, text, bg_color, command):
+            """Crea un botón con emoji grande y texto normal - TODO CENTRADO"""
+            # Usamos un Frame como contenedor
+            btn_frame = tk.Frame(parent, bg=bg_color)
+            
+            # AJUSTAR TAMAÑO DE FUENTE SEGÚN EMOJI
+            emoji_size = 24  # Tamaño base
+            
+            if emoji == "🛒":
+                emoji_size = 28
+            elif emoji == "🛍️":
+                emoji_size = 26
+            elif emoji in ["🔧", "🏢", "🏷️", "🗂️"]:
+                emoji_size = 24
+            
+            # CONTENEDOR PRINCIPAL para centrar vertical y horizontalmente
+            center_container = tk.Frame(btn_frame, bg=bg_color)
+            center_container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  # ¡Centrado perfecto!
+            
+            # Emoji con fuente ajustada - CENTRADO
+            emoji_label = tk.Label(center_container,
+                                text=emoji,
+                                font=("Segoe UI Emoji", emoji_size),
+                                bg=bg_color,
+                                fg=styles.COLOR_BLANCO)
+            emoji_label.pack(pady=(0, 2))  # Solo padding abajo de 2px
+            
+            # Texto con fuente normal - CENTRADO
+            text_label = tk.Label(center_container,
+                                text=text,
                                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
-                                bg=styles.COLOR_FONDO_OSCURO,  # ← CAMBIADO a morado oscuro
-                                fg=styles.COLOR_BLANCO,
-                                relief=tk.FLAT,
-                                bd=0,
-                                cursor=styles.CURSOR_BOTON,
-                                command=self.openMarcasWindow,
-                                activebackground=styles.COLOR_FONDO_OSCURO,
-                                activeforeground=styles.COLOR_BLANCO)
-        self.btn_marcas.grid(row=2, column=0, padx=(0, 7), pady=(7, 0), sticky="nsew")
+                                bg=bg_color,
+                                fg=styles.COLOR_BLANCO)
+            text_label.pack()  # Sin padding extra
+            
+            # Hacer frame clickeable
+            def on_click(e=None):
+                command()
+            
+            btn_frame.bind("<Button-1>", on_click)
+            center_container.bind("<Button-1>", on_click)
+            emoji_label.bind("<Button-1>", on_click)
+            text_label.bind("<Button-1>", on_click)
+            
+            # Cambiar cursor al pasar sobre el frame
+            btn_frame.bind("<Enter>", lambda e: btn_frame.config(cursor="hand2"))
+            btn_frame.bind("<Leave>", lambda e: btn_frame.config(cursor=""))
+            
+            return btn_frame
         
-        # Botón 4: CATEGORIAS (Color del sistema)
-        self.btn_categorias = tk.Button(self.inner_frame, 
-                                    text="CATEGORIAS", 
-                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
-                                    bg=self.system_color,  # ← CAMBIADO a color del sistema
-                                    fg=styles.COLOR_BLANCO,
-                                    relief=tk.FLAT,
-                                    bd=0,
-                                    cursor=styles.CURSOR_BOTON,
-                                    command=self.openCategoriasWindow,
-                                    activebackground=self.system_color,
-                                    activeforeground=styles.COLOR_BLANCO)
-        self.btn_categorias.grid(row=2, column=1, padx=(7, 0), pady=(7, 0), sticky="nsew")
+        # Crear botones con contenido centrado
+        btn1 = create_button_with_large_emoji(
+            self.inner_frame, 
+            producto_emoji, 
+            productos_text,
+            styles.COLOR_FONDO_OSCURO,
+            self.open_productos
+        )
+        btn1.grid(row=1, column=0, padx=(0, 7), pady=(0, 7), sticky="nsew")
         
-        # Configurar altura mínima de las filas de botones
-        self.inner_frame.grid_rowconfigure(1, minsize=80)
-        self.inner_frame.grid_rowconfigure(2, minsize=80)
+        btn2 = create_button_with_large_emoji(
+            self.inner_frame,
+            "🏢",
+            "EDIFICIOS",
+            self.system_color,
+            self.openEdificiosWindow
+        )
+        btn2.grid(row=1, column=1, padx=(7, 0), pady=(0, 7), sticky="nsew")
+        
+        btn3 = create_button_with_large_emoji(
+            self.inner_frame,
+            "🏷️",
+            "MARCAS",
+            styles.COLOR_FONDO_OSCURO,
+            self.openMarcasWindow
+        )
+        btn3.grid(row=2, column=0, padx=(0, 7), pady=(7, 0), sticky="nsew")
+        
+        btn4 = create_button_with_large_emoji(
+            self.inner_frame,
+            "🗂️",
+            "CATEGORIAS",
+            self.system_color,
+            self.openCategoriasWindow
+        )
+        btn4.grid(row=2, column=1, padx=(7, 0), pady=(7, 0), sticky="nsew")
+        
+        # Configurar altura mínima
+        self.inner_frame.grid_rowconfigure(1, minsize=110)
+        self.inner_frame.grid_rowconfigure(2, minsize=110)
+
+
     def create_alarm_panel(self):
         """Crea panel de alarmas MEJORADO (común para ambos sistemas)"""
         # Frame para sección de alarmas

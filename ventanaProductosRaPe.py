@@ -19,12 +19,12 @@ class VentanaProductosRaPe:
         # Centrar ventana usando nuestra función
         self.centerWindow(1500, 900)
         
-        self.window.configure(bg=styles.COLOR_FONDO)
+        self.window.configure(bg=styles.COLOR_FONDO_OSCURO)
         self.window.transient(root)
         self.window.grab_set()
         
         # Frame principal
-        self.main_frame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
+        self.main_frame = tk.Frame(self.window, bg=styles.COLOR_FONDO_OSCURO, padx=20, pady=20)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Título con color del sistema RA-PE - ¡CORREGIDO!
@@ -43,11 +43,11 @@ class VentanaProductosRaPe:
         # ============================================
         # BARRA SUPERIOR DE CONTROLES
         # ============================================
-        top_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
+        top_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO_OSCURO)
         top_frame.pack(fill=tk.X, pady=(0, 15))
         
         # Botones a la izquierda
-        btn_frame_left = tk.Frame(top_frame, bg=styles.COLOR_FONDO)
+        btn_frame_left = tk.Frame(top_frame, bg=styles.COLOR_FONDO_OSCURO)
         btn_frame_left.pack(side=tk.LEFT)
         
         self.btn_agregar = tk.Button(btn_frame_left, 
@@ -86,14 +86,14 @@ class VentanaProductosRaPe:
         self.btn_detalles.pack(side=tk.LEFT)
         
         # Barra de búsqueda a la derecha
-        search_frame = tk.Frame(top_frame, bg=styles.COLOR_FONDO)
+        search_frame = tk.Frame(top_frame, bg=styles.COLOR_FONDO_OSCURO)
         search_frame.pack(side=tk.RIGHT)
         
         self.lbl_buscar = tk.Label(search_frame,
                                   text="Buscar:",
-                                  font=(styles.FUENTE_PRINCIPAL, 11),
-                                  bg=styles.COLOR_FONDO,
-                                  fg=styles.COLOR_TEXTO_OSCURO)
+                                  font=(styles.FUENTE_PRINCIPAL, 11, "bold"),
+                                  bg=styles.COLOR_FONDO_OSCURO,
+                                  fg=styles.COLOR_BLANCO)
         self.lbl_buscar.pack(side=tk.LEFT, padx=(0, 8))
         
         self.entry_buscar = tk.Entry(search_frame,
@@ -189,7 +189,7 @@ class VentanaProductosRaPe:
         # ============================================
         # BARRA INFERIOR DE CONTROLES
         # ============================================
-        bottom_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
+        bottom_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO_OSCURO)
         bottom_frame.pack(fill=tk.X, pady=(20, 0))
         
         self.btn_eliminar = tk.Button(bottom_frame,
