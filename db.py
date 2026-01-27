@@ -25,7 +25,8 @@ class Database:
             "user": os.getenv("DB_USER"),
             "password": os.getenv("DB_PASSWORD"),
             "port": os.getenv("DB_PORT", "5432"),
-            "sslmode": os.getenv("DB_SSLMODE", "require")
+            "sslmode": os.getenv("DB_SSLMODE", "require"),
+            "connect_timeout": 5
         }
         
         self.connection_pool = None
