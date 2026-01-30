@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+import os
+import sys
 import styles
 from tiendaDef import TiendaSystem
 from rapeDef import RAPESystem
@@ -10,6 +12,18 @@ class MainApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistema de Inventario")
+        
+        # DEBUG: Mostrar información del sistema
+        print("=" * 60)
+        print("DEBUG - Información del sistema:")
+        print(f"Carpeta actual (os.getcwd()): {os.getcwd()}")
+        print(f"Donde está main.py (__file__): {os.path.abspath(__file__)}")
+        print(f"Directorio de main.py: {os.path.dirname(os.path.abspath(__file__))}")
+        try:
+            print(f"Archivos en carpeta actual: {os.listdir('.')}")
+        except:
+            print("No se pudo listar archivos")
+        print("=" * 60)
         
         # Verificar conexión primero
         self.db_status = self.check_database_connection()
@@ -32,30 +46,167 @@ class MainApp:
         self.show_system_selection()
     
     def load_logo(self):
-        """Carga y escala el logo institucional"""
+        """Carga el logo - VERSIÓN MEJORADA QUE PRUEBA TODO"""
+        print("\n" + "="*60)
+        print("INICIANDO BÚSQUEDA DEL LOGO...")
+        print("="*60)
+        
+        # Obtener todas las rutas posibles
+        current_dir = os.getcwd()
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        print(f"1. Directorio actual de trabajo: {current_dir}")
+        print(f"2. Directorio del script (main.py): {script_dir}")
+        
+        if hasattr(sys, 'frozen'):
+            exe_dir = os.path.dirname(sys.executable)
+            print(f"3. Directorio del ejecutable (.exe): {exe_dir}")
+        
+        # Lista de TODAS las rutas posibles (ordenadas por probabilidad)
+        all_paths_to_try = []
+        
+        # PRIMERO: Rutas relativas desde donde está main.py (más probable)
+        if script_dir:
+            all_paths_to_try.extend([
+                os.path.join(script_dir, "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(script_dir, "..", "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(script_dir, "..", "..", "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(script_dir, "Imagenes", "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(script_dir, "imagenes", "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(script_dir, "assets", "EMBLEMA-HORIZONTAL-3.png"),
+            ])
+        
+        # SEGUNDO: Rutas desde el directorio actual
+        if current_dir != script_dir:
+            all_paths_to_try.extend([
+                os.path.join(current_dir, "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(current_dir, "..", "EMBLEMA-HORIZONTAL-3.png"),
+                os.path.join(current_dir, "Imagenes", "EMBLEMA-HORIZONTAL-3.png"),
+            ])
+        
+        # TERCERO: Si es .exe, buscar desde el ejecutable
+        if hasattr(sys, 'frozen'):
+            exe_dir = os.path.dirname(sys.executable)
+            if exe_dir not in [script_dir, current_dir]:
+                all_paths_to_try.extend([
+                    os.path.join(exe_dir, "EMBLEMA-HORIZONTAL-3.png"),
+                    os.path.join(exe_dir, "..", "EMBLEMA-HORIZONTAL-3.png"),
+                    os.path.join(exe_dir, "Imagenes", "EMBLEMA-HORIZONTAL-3.png"),
+                ])
+        
+        # CUARTO: Rutas específicas que mencionaste
+        specific_paths = [
+            "C:/Users/Usuario/Desktop/TCU/Documentacion/Software/Sistema-de-inventarios-Guias-y-Scouts-de-Costa-Rica/EMBLEMA-HORIZONTAL-3.png",
+            os.path.expanduser("~/Desktop/TCU/Documentacion/Software/Sistema-de-inventarios-Guias-y-Scouts-de-Costa-Rica/EMBLEMA-HORIZONTAL-3.png"),
+        ]
+        all_paths_to_try.extend(specific_paths)
+        
+        # QUINTO: Buscar en el disco C: (último recurso, solo Windows)
+        if sys.platform == "win32":
+            # Buscar en el escritorio
+            desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+            all_paths_to_try.append(os.path.join(desktop, "EMBLEMA-HORIZONTAL-3.png"))
+            all_paths_to_try.append(os.path.join(desktop, "Sistema-de-inventarios-Guias-y-Scouts-de-Costa-Rica", "EMBLEMA-HORIZONTAL-3.png"))
+        
+        # Eliminar duplicados
+        unique_paths = []
+        seen = set()
+        for path in all_paths_to_try:
+            if path not in seen:
+                seen.add(path)
+                unique_paths.append(path)
+        
+        # PROBAR TODAS LAS RUTAS
+        print(f"\nProbando {len(unique_paths)} rutas posibles...")
+        print("-" * 60)
+        
+        for i, path in enumerate(unique_paths[:20]):  # Solo probar primeras 20
+            try:
+                if os.path.exists(path):
+                    print(f"✓ [{i+1}] ¡ENCONTRADO! en: {path}")
+                    
+                    # Intentar cargar la imagen
+                    try:
+                        pil_image = Image.open(path)
+                        base_height = 115
+                        w_percent = (base_height / float(pil_image.size[1]))
+                        w_size = int(float(pil_image.size[0]) * float(w_percent))
+                        pil_image = pil_image.resize((w_size, base_height), Image.Resampling.LANCZOS)
+                        
+                        print(f"  ✓ Logo cargado exitosamente")
+                        print("=" * 60)
+                        return ImageTk.PhotoImage(pil_image)
+                        
+                    except Exception as img_error:
+                        print(f"  ✗ Error cargando imagen: {img_error}")
+                else:
+                    print(f"  [{i+1}] No existe: {path}")
+            except Exception as e:
+                print(f"  [{i+1}] Error verificando: {path} - {e}")
+        
+        print("\n" + "="*60)
+        print("⚠️ ADVERTENCIA: NO SE ENCONTRÓ EL LOGO")
+        print("="*60)
+        print("\nCreando logo temporal...")
+        
+        # Crear logo temporal
+        return self.create_temp_logo()
+    
+    def create_temp_logo(self):
+        """Crea un logo temporal si no se encuentra el original"""
         try:
-            # Intentar cargar el logo desde la carpeta actual
-            logo_path = "Sistema-de-inventarios-Guias-y-Scouts-de-Costa-Rica\EMBLEMA-HORIZONTAL-3.png"
+            from PIL import Image, ImageDraw
             
-            # Abrir imagen con PIL
-            pil_image = Image.open(logo_path)
+            # Crear una imagen simple
+            width = 400
+            height = 115
             
-            # Escalar a tamaño apropiado para encabezado (alto máximo 60px)
-            base_height = 115
-            w_percent = (base_height / float(pil_image.size[1]))
-            w_size = int(float(pil_image.size[0]) * float(w_percent))
+            # Crear imagen con fondo morado
+            img = Image.new('RGB', (width, height), color=(44, 18, 97))  # COLOR_FONDO_OSCURO
             
-            # Redimensionar manteniendo aspect ratio
-            pil_image = pil_image.resize((w_size, base_height), Image.Resampling.LANCZOS)
+            # Dibujar texto simple
+            draw = ImageDraw.Draw(img)
             
-            # Convertir a formato Tkinter
-            return ImageTk.PhotoImage(pil_image)
+            # Intentar usar una fuente
+            try:
+                from PIL import ImageFont
+                
+                # Intentar fuentes comunes
+                font_paths = [
+                    "arial.ttf",
+                    "C:/Windows/Fonts/arial.ttf",
+                    "C:/Windows/Fonts/arialbd.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                ]
+                
+                font = None
+                for font_path in font_paths:
+                    try:
+                        if os.path.exists(font_path):
+                            font = ImageFont.truetype(font_path, 20)
+                            break
+                    except:
+                        continue
+                
+                if font:
+                    # Texto con fuente
+                    draw.text((20, 20), "Guias y Scouts de Costa Rica", fill="white", font=font)
+                    draw.text((20, 50), "Institución Benemérita", fill="white", font=font)
+                    draw.text((20, 80), "Sistema de Inventario", fill="#04bc99", font=font)
+                else:
+                    # Texto sin fuente
+                    draw.text((20, 40), "Sistema de Inventario", fill="white")
+                    draw.text((20, 70), "Logo no encontrado", fill="#ffa400")
+                    
+            except ImportError:
+                # Si no hay PIL o no funciona
+                draw.text((20, 40), "Sistema de Inventario", fill="white")
+                draw.text((20, 70), "Versión sin logo", fill="#ffa400")
             
-        except FileNotFoundError:
-            print(f"Advertencia: No se encontró el logo en {logo_path}")
-            return None
+            return ImageTk.PhotoImage(img)
+            
         except Exception as e:
-            print(f"Error cargando logo: {e}")
+            print(f"Error creando logo temporal: {e}")
             return None
     
     def check_database_connection(self):
@@ -331,18 +482,6 @@ class MainApp:
                                  image=self.logo_image,
                                  bg=styles.COLOR_FONDO_OSCURO)
             logo_label.pack(side=tk.LEFT, padx=(0, 15))
-            
-            # Texto institucional (opcional - si el logo ya lo incluye, puedes omitir esto)
-            # Si el logo solo tiene imágenes y no texto, puedes añadir:
-            """
-            tk.Label(left_container,
-                    text="Guias y Scouts de Costa Rica\ninstitución benemérita",
-                    font=(styles.FUENTE_PRINCIPAL, 9, styles.PESO_NORMAL),
-                    bg=styles.COLOR_FONDO_OSCURO,
-                    fg=styles.COLOR_BLANCO,
-                    justify=tk.LEFT).pack(side=tk.LEFT)
-            """
-        
         else:
             # Fallback: Mostrar texto si no hay logo
             tk.Label(left_container,

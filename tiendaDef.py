@@ -4,6 +4,9 @@ from baseSystem import BaseSystem
 import styles
 from datetime import datetime
 import os
+from pathlib import Path  # Añadido para manejo de rutas
+import platform
+import subprocess
 
 class TiendaSystem(BaseSystem):
     def __init__(self, root, return_callback, db_status="Conectado"):
@@ -310,13 +313,14 @@ class TiendaSystem(BaseSystem):
                         for col_letter, width in column_widths2.items():
                             ws2.column_dimensions[col_letter].width = width
                     
-                    # GUARDAR ARCHIVO
-                    export_dir = "exportaciones"
-                    if not os.path.exists(export_dir):
-                        os.makedirs(export_dir)
+                    # GUARDAR ARCHIVO - USANDO DIRECTORIO DE DOCUMENTOS
+                    # Crear carpeta en Documentos del usuario
+                    docs_dir = Path.home() / "Documents" / "Exportaciones de Inventarios"
+                    export_dir = str(docs_dir)
+                    os.makedirs(export_dir, exist_ok=True)  # Esto no fallará por permisos
                     
                     fecha_nombre = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"{export_dir}/Inventario_TIENDA_{fecha_nombre}.xlsx"
+                    filename = os.path.join(export_dir, f"Inventario_TIENDA_{fecha_nombre}.xlsx")
                     
                     wb.save(filename)
                     
@@ -328,6 +332,26 @@ class TiendaSystem(BaseSystem):
                     )
                     
                     print(f"[TIENDA] Excel exportado: {filename}")
+                    
+                    # Preguntar si quiere abrir la carpeta
+                    respuesta = messagebox.askyesno(
+                        "Abrir ubicación",
+                        f"¿Desea abrir la carpeta donde se guardó el archivo?\n\n"
+                        f"{export_dir}"
+                    )
+                    
+                    if respuesta:
+                        try:
+                            if platform.system() == "Windows":
+                                os.startfile(export_dir)
+                            elif platform.system() == "Darwin":  # macOS
+                                subprocess.call(["open", export_dir])
+                            else:  # Linux
+                                subprocess.call(["xdg-open", export_dir])
+                            print(f"[TIENDA] Carpeta abierta: {export_dir}")
+                        except Exception as e:
+                            print(f"Error abriendo carpeta: {e}")
+                            messagebox.showwarning("Error", f"No se pudo abrir la carpeta:\n{str(e)}")
                     
                 except Exception as e:
                     print(f"Error exportando Excel TIENDA: {e}")
