@@ -208,7 +208,6 @@ class VentanaDetalleProductoTienda:
     
     def loadDatos(self):
         """Carga datos en el formulario"""
-        # Cargar marcas en el combobox
         marcas = self.db.get_all_marcas()
         if marcas:
             marca_dict = {}
@@ -220,7 +219,6 @@ class VentanaDetalleProductoTienda:
             self.marcaCombobox['values'] = nombres_marcas
             self.marca_dict = marca_dict
         
-        # Cargar categorías en el combobox
         categorias = self.db.get_all_categorias()
         if categorias:
             categoria_dict = {}
@@ -232,9 +230,7 @@ class VentanaDetalleProductoTienda:
             self.categoriaCombobox['values'] = nombres_categorias
             self.categoria_dict = categoria_dict
         
-        # Si es edición, cargar datos del producto
         if self.producto_id:
-            # Obtener producto desde vista optimizada
             productos = self.db.get_productos_tienda_completo()
             producto = next((p for p in productos if p['id_productostienda'] == self.producto_id), None)
             
@@ -269,10 +265,8 @@ class VentanaDetalleProductoTienda:
     def actualizarAlarmasSiEstanAbiertas(self):
         """Intenta actualizar ventanas de alarmas si están abiertas"""
         try:
-            # Buscar ventana raíz de la aplicación
             root_window = self.window.winfo_toplevel()
             
-            # Buscar entre todas las ventanas hijas del root
             for child in root_window.winfo_children():
                 if isinstance(child, tk.Toplevel):
                     try:
@@ -393,7 +387,6 @@ class VentanaDetalleProductoTienda:
         try:
             from ventanaDistribucionInventario import VentanaDistribucionInventario
             
-            # Crear ventana de distribución pasando el callback principal
             ventana_dist = VentanaDistribucionInventario(
                 self.parent, 
                 producto_id, 
@@ -403,7 +396,6 @@ class VentanaDetalleProductoTienda:
                 modo="agregar"
             )
             
-            # Configurar para que cuando se cierre la distribución, también se cierre esta ventana
             def on_dist_close():
                 self.window.destroy()
             

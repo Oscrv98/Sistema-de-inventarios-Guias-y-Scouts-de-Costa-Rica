@@ -510,7 +510,7 @@ class Database:
 
     def create_producto_rape(self, nombre, id_marca, id_categoria, alarma_cap=5):
         """Crear nuevo producto en RA-PE con validación de unicidad"""
-        # Validar que no exista
+       
         if self.check_duplicate_producto_rape(nombre):
             return None, f"Ya existe un material RA-PE con el nombre '{nombre}'"
         
@@ -525,7 +525,7 @@ class Database:
 
     def update_producto_rape(self, id_producto, nombre, id_marca, id_categoria, alarma_cap=None):
         """Actualizar producto RA-PE existente con validación de unicidad"""
-        # Validar que no exista otro con el mismo nombre
+        
         if self.check_duplicate_producto_rape(nombre, id_producto):
             return False, f"Ya existe otro material RA-PE con el nombre '{nombre}'"
         

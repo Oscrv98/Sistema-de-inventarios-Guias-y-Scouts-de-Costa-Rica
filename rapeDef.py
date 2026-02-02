@@ -10,7 +10,6 @@ import subprocess
 
 class RAPESystem(BaseSystem):
     def __init__(self, root, return_callback, db_status="Conectado"):
-        # Configurar botón personalizado para el encabezado
         custom_button = {
             'text': "EXPORTAR EXCEL",
             'command': self.exportar_excel_rape
@@ -18,7 +17,6 @@ class RAPESystem(BaseSystem):
         
         super().__init__(root, return_callback, "RA-PE", db_status, custom_button)
         
-        # Actualizar alarmas
         self.update_alarms()
     
     def open_productos(self):
@@ -59,7 +57,6 @@ class RAPESystem(BaseSystem):
             from datetime import datetime
             import os
             
-            # Primero obtener datos para mostrar en la confirmación
             db = Database()
             data = db.get_export_data_rape()
             
@@ -67,22 +64,18 @@ class RAPESystem(BaseSystem):
                 messagebox.showwarning("Sin datos", "No hay datos para exportar en RA-PE")
                 return
             
-            # Calcular estadísticas
             total_materiales = len(data['resumen'])
             total_registros = len(data['detalle'])
             
-            # Crear ventana de confirmación personalizada (MODAL)
             confirm_window = tk.Toplevel(self.root)
             confirm_window.title("Confirmar Exportación")
             confirm_window.geometry("550x350")  # Un poco más ancho
             confirm_window.configure(bg=styles.COLOR_FONDO)
             confirm_window.resizable(False, False)
             
-            # Hacerla modal
             confirm_window.transient(self.root)
             confirm_window.grab_set()
             
-            # Centrar sobre la ventana principal
             self.root.update_idletasks()
             root_x = self.root.winfo_x()
             root_y = self.root.winfo_y()
@@ -97,39 +90,33 @@ class RAPESystem(BaseSystem):
             
             confirm_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
             
-            # Frame principal
             main_frame = tk.Frame(confirm_window, 
                                 bg=styles.COLOR_FONDO, 
                                 padx=30, 
                                 pady=25)
             main_frame.pack(fill=tk.BOTH, expand=True)
             
-            # Icono/emoji principal (EXPORTAR)
             tk.Label(main_frame, 
                     text="📥",
                     font=("Segoe UI Emoji", 32),
                     bg=styles.COLOR_FONDO,
                     fg=self.system_color).pack(pady=(0, 10))
             
-            # Título
             tk.Label(main_frame,
                     text="Exportar a Excel",
                     font=(styles.FUENTE_PRINCIPAL, 16, styles.PESO_NEGRITA),
                     bg=styles.COLOR_FONDO,
                     fg=styles.COLOR_TEXTO_OSCURO).pack(pady=(0, 8))
             
-            # Mensaje descriptivo
             tk.Label(main_frame,
                     text="Se exportarán los siguientes datos:",
                     font=(styles.FUENTE_PRINCIPAL, 11),
                     bg=styles.COLOR_FONDO,
                     fg=styles.COLOR_TEXTO_MEDIO).pack(pady=(0, 20))
             
-            # CONTENEDOR CON ICONO GRANDE Y ESTADÍSTICAS AL LADO
             stats_container = tk.Frame(main_frame, bg=styles.COLOR_FONDO)
             stats_container.pack(fill=tk.X, pady=(0, 25))
             
-            # LADO IZQUIERDO: ICONO GRANDE DE GRÁFICO
             icon_frame = tk.Frame(stats_container, bg=styles.COLOR_FONDO)
             icon_frame.pack(side=tk.LEFT, padx=(0, 20))
             
@@ -139,11 +126,9 @@ class RAPESystem(BaseSystem):
                     bg=styles.COLOR_FONDO,
                     fg=self.system_color).pack()
             
-            # LADO DERECHO: ESTADÍSTICAS EN COLUMNA
             numbers_frame = tk.Frame(stats_container, bg=styles.COLOR_FONDO)
             numbers_frame.pack(side=tk.LEFT, fill=tk.Y)
             
-            # Materiales
             material_frame = tk.Frame(numbers_frame, bg=styles.COLOR_FONDO)
             material_frame.pack(anchor=tk.W, pady=(5, 15))
             
@@ -161,7 +146,6 @@ class RAPESystem(BaseSystem):
                     fg=self.system_color,
                     anchor="w").pack(side=tk.LEFT)
             
-            # Registros
             registros_frame = tk.Frame(numbers_frame, bg=styles.COLOR_FONDO)
             registros_frame.pack(anchor=tk.W, pady=(0, 5))
             
@@ -179,23 +163,18 @@ class RAPESystem(BaseSystem):
                     fg=self.system_color,
                     anchor="w").pack(side=tk.LEFT)
             
-            # Frame para botones
             button_frame = tk.Frame(main_frame, bg=styles.COLOR_FONDO)
             button_frame.pack(fill=tk.X, pady=(10, 0))
             
-            # Función para exportar REAL
             def do_export():
                 confirm_window.destroy()
                 
                 try:
-                    # Crear workbook
                     wb = openpyxl.Workbook()
                     
-                    # HOJA 1: RESUMEN DE MATERIALES
                     ws1 = wb.active
                     ws1.title = "Resumen Materiales"
                     
-                    # Título
                     fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
                     ws1.merge_cells('A1:G1')
                     title_cell = ws1['A1']
@@ -204,7 +183,6 @@ class RAPESystem(BaseSystem):
                     title_cell.alignment = Alignment(horizontal='center', vertical='center')
                     title_cell.fill = PatternFill(start_color="8064A2", end_color="8064A2", fill_type="solid")
                     
-                    # Encabezados
                     if data['resumen']:
                         headers = list(data['resumen'][0].keys())
                         for col_num, header in enumerate(headers, 1):
@@ -213,7 +191,6 @@ class RAPESystem(BaseSystem):
                             cell.alignment = Alignment(horizontal='center')
                             cell.fill = PatternFill(start_color="9BBB59", end_color="9BBB59", fill_type="solid")
                         
-                        # Datos
                         for row_num, row_data in enumerate(data['resumen'], 4):
                             for col_num, key in enumerate(headers, 1):
                                 value = row_data[key]
@@ -245,7 +222,6 @@ class RAPESystem(BaseSystem):
                         for col_letter, width in column_widths.items():
                             ws1.column_dimensions[col_letter].width = width
                     
-                    # HOJA 2: DETALLE DE INVENTARIO
                     if data['detalle']:
                         ws2 = wb.create_sheet(title="Inventario Detallado")
                         
@@ -286,8 +262,6 @@ class RAPESystem(BaseSystem):
                         for col_letter, width in column_widths2.items():
                             ws2.column_dimensions[col_letter].width = width
                     
-                    # GUARDAR ARCHIVO - USANDO DIRECTORIO DE DOCUMENTOS
-                    # Crear carpeta en Documentos del usuario
                     docs_dir = Path.home() / "Documents" / "Exportaciones de Inventarios"
                     export_dir = str(docs_dir)
                     os.makedirs(export_dir, exist_ok=True)  # Esto no fallará por permisos
@@ -306,7 +280,6 @@ class RAPESystem(BaseSystem):
                     
                     print(f"[RA-PE] Excel exportado: {filename}")
                     
-                    # Preguntar si quiere abrir la carpeta
                     respuesta = messagebox.askyesno(
                         "Abrir ubicación",
                         f"¿Desea abrir la carpeta donde se guardó el archivo?\n\n"
@@ -333,7 +306,6 @@ class RAPESystem(BaseSystem):
                         f"No se pudo exportar el archivo:\n{str(e)}"
                     )
             
-            # Botón SÍ (Exportar)
             btn_export = tk.Button(button_frame,
                                 text="Sí, Exportar",
                                 font=(styles.FUENTE_PRINCIPAL, 11, styles.PESO_NEGRITA),
@@ -347,7 +319,6 @@ class RAPESystem(BaseSystem):
                                 pady=20)
             btn_export.pack(side=tk.LEFT, padx=(0, 25))
             
-            # Botón NO (Cancelar)
             btn_cancel = tk.Button(button_frame,
                                 text="No, Cancelar",
                                 font=(styles.FUENTE_PRINCIPAL, 11, styles.PESO_NEGRITA),
@@ -361,7 +332,6 @@ class RAPESystem(BaseSystem):
                                 pady=20)
             btn_cancel.pack(side=tk.RIGHT)
             
-            # Forzar actualización
             confirm_window.update_idletasks()
             
         except Exception as e:

@@ -29,11 +29,9 @@ class VentanaDistribucionInventario:
         self.callback_obj = callback_obj
         self.modo = modo.lower()
         
-        # Determinar si es producto nuevo
         self.es_nuevo_producto = (modo.lower() == "agregar")
         self.db = Database()
         
-        # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         title_suffix = "TIENDA" if sistema == "tienda" else "RA-PE"
         self.window.title(f"Distribución de Inventario {title_suffix} - {producto_nombre}")
@@ -43,13 +41,10 @@ class VentanaDistribucionInventario:
         self.window.transient(parent)
         self.window.grab_set()
         
-        # Centrar ventana
         self.centerWindow(900, 600)
         
-        # Configurar evento de cierre
         self.window.protocol("WM_DELETE_WINDOW", self.on_window_close)
         
-        # Crear interfaz
         self.createWidgets()
         self.loadInventario()
     
@@ -63,11 +58,9 @@ class VentanaDistribucionInventario:
     
     def createWidgets(self):
         """Crea todos los widgets de la ventana"""
-        # Frame principal
         mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=20, pady=20)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
         sistema_text = "TIENDA" if self.sistema == "tienda" else "RA-PE"
         title_text = f"Distribución en Edificios - {sistema_text}"
         if self.es_nuevo_producto:
@@ -80,7 +73,6 @@ class VentanaDistribucionInventario:
                         fg=styles.COLOR_TEXTO_OSCURO)
         title.pack(pady=(0, 10))
         
-        # Subtítulo con nombre del producto
         tipo_producto = "Producto" if self.sistema == "tienda" else "Material"
         subtitle = tk.Label(mainFrame, 
                           text=f"{tipo_producto}: {self.producto_nombre}", 
@@ -89,7 +81,6 @@ class VentanaDistribucionInventario:
                           fg=styles.COLOR_TEXTO_MEDIO)
         subtitle.pack(pady=(0, 20))
         
-        # Instrucción
         if self.es_nuevo_producto:
             instruction = tk.Label(mainFrame, 
                                  text="Configure el inventario para cada edificio. Luego guarde los cambios.", 
@@ -105,15 +96,12 @@ class VentanaDistribucionInventario:
                                  fg=styles.COLOR_TEXTO_CLARO)
             instruction.pack(pady=(0, 10))
         
-        # Frame para la tabla (Treeview)
         tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         tableFrame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
         
-        # Crear Treeview
         columns = ("ID_Inv", "Edificio", "Cantidad", "Etiqueta", "Estante", "Lugar")
         self.tree = ttk.Treeview(tableFrame, columns=columns, show="headings", height=8)
         
-        # Configurar columnas
         column_configs = [
             ("ID_Inv", "ID Inv", 80, "center"),
             ("Edificio", "Edificio", 200, "center"),
@@ -127,11 +115,9 @@ class VentanaDistribucionInventario:
             self.tree.heading(col, text=heading)
             self.tree.column(col, width=width, anchor=anchor)
 
-        # Configurar estilo para el Treeview
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Configurar estilo global para Treeview
         style.configure("Treeview",
                         background=styles.COLOR_FONDO,
                         foreground=styles.COLOR_TEXTO_OSCURO,
@@ -139,7 +125,6 @@ class VentanaDistribucionInventario:
                         borderwidth=1,
                         rowheight=25)
         
-        # Configurar específicamente los headings
         style.configure("Treeview.Heading", 
                         background=styles.COLOR_TREEVIEW_HEADING,
                         foreground=styles.COLOR_BLANCO,
@@ -147,32 +132,25 @@ class VentanaDistribucionInventario:
                         relief="flat",
                         padding=(5, 5))
         
-        # Configurar color de selección
         style.map('Treeview',
                   background=[('selected', styles.COLOR_TREEVIEW_SELECTION)],
                   foreground=[('selected', styles.COLOR_TEXTO_OSCURO)])
         
-        # Configurar colores para filas alternas
         self.tree.tag_configure('odd', background=styles.COLOR_TREEVIEW_ODD)
         self.tree.tag_configure('even', background=styles.COLOR_TREEVIEW_EVEN)
 
-        # Scrollbar
         scrollbar = ttk.Scrollbar(tableFrame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Layout Treeview y Scrollbar
         self.tree.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
         
-        # Configurar grid para expansión
         tableFrame.grid_rowconfigure(0, weight=1)
         tableFrame.grid_columnconfigure(0, weight=1)
         
-        # Frame para botones
         buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         buttonFrame.pack(fill=tk.X, pady=(0, 10))
         
-        # Botón Editar Seleccionado
         self.btnEditar = tk.Button(buttonFrame, 
                                    text="Editar Registro Seleccionado", 
                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -183,11 +161,9 @@ class VentanaDistribucionInventario:
                                    command=self.editarRegistro)
         self.btnEditar.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Frame para botones finales
         finalButtonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         finalButtonFrame.pack(fill=tk.X)
         
-        # Botón Guardar (solo visible para nuevo producto)
         if self.es_nuevo_producto:
             self.btnGuardar = tk.Button(finalButtonFrame, 
                                        text="Guardar y Finalizar", 
@@ -198,7 +174,6 @@ class VentanaDistribucionInventario:
                                        command=self.finalizarAgregado)
             self.btnGuardar.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Botón Cerrar
         btnText = "Cerrar" if not self.es_nuevo_producto else "Cancelar"
         btnCommand = self.window.destroy if not self.es_nuevo_producto else self.cancelarAgregado
         
@@ -211,10 +186,8 @@ class VentanaDistribucionInventario:
                              command=btnCommand)
         btnCerrar.pack(side=tk.RIGHT)
         
-        # Evento de selección en Treeview
         self.tree.bind("<<TreeviewSelect>>", self.onTreeSelect)
         
-        # Variables para control
         self.registroSeleccionado = None
     
     def loadInventario(self):
@@ -289,7 +262,6 @@ class VentanaDistribucionInventario:
         if not self.registroSeleccionado:
             return
         
-        # Obtener datos del registro seleccionado
         selection = self.tree.selection()
         if not selection:
             return
@@ -305,7 +277,6 @@ class VentanaDistribucionInventario:
             'sistema': self.sistema  # Agregar sistema para saber qué tabla usar
         }
         
-        # Abrir ventana de edición
         VentanaEditarRegistroInventario(self.window, registro_data, self)
         
     def actualizarRegistroEnTabla(self, id_inv, nuevos_valores):
@@ -326,7 +297,6 @@ class VentanaDistribucionInventario:
     
     def finalizarAgregado(self):
         """Finaliza el proceso de agregado de producto"""
-        # Refrescar tabla principal si hay callback
         if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
             self.callback_obj.loadProductos()
         
@@ -348,7 +318,6 @@ class VentanaDistribucionInventario:
     
     def on_window_close(self):
         """Se ejecuta cuando se cierra la ventana (X)"""
-        # Si estamos en modo "detalles", refrescar la tabla principal
         if self.modo == "detalles" and self.callback_obj:
             if hasattr(self.callback_obj, 'loadProductos'):
                 self.callback_obj.loadProductos()
@@ -510,7 +479,6 @@ class VentanaEditarRegistroInventario:
     def buscarYActualizarAlarmas(self):
         """Busca ventana de alarmas y la actualiza - VERSIÓN MEJORADA"""
         try:
-            # Si el callback_obj es una ventana de alarmas, actualizarla directamente
             if hasattr(self.callback_obj, 'callback_obj'):
                 alarm_window = self.callback_obj.callback_obj
                 if alarm_window and hasattr(alarm_window, 'actualizarTabla'):
@@ -518,11 +486,8 @@ class VentanaEditarRegistroInventario:
                     print(f"[INFO] Tabla de alarmas actualizada directamente desde inventario")
                     return True
             
-            # Buscar ventana de alarmas en la jerarquía de ventanas
-            # Buscar en el parent principal (ventana raíz de la aplicación)
             root_window = self.window.winfo_toplevel()
             
-            # Buscar entre todas las ventanas hijas del root
             for child in root_window.winfo_children():
                 if isinstance(child, tk.Toplevel):
                     try:

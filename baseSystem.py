@@ -9,7 +9,6 @@ class BaseSystem:
         self.system_name = system_name
         self.db_status = db_status
         
-        # Obtener color según sistema
         self.system_color = styles.COLOR_TIENDA if system_name.upper() == "TIENDA" else styles.COLOR_RAPE
         
         
@@ -24,7 +23,6 @@ class BaseSystem:
                                   pady=0)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # componentes básicos
         if custom_header_button:
             self.create_header(custom_header_button['text'], custom_header_button['command'])
         else:
@@ -120,7 +118,6 @@ class BaseSystem:
                                 fg=self.system_color)
             text_label.pack(side=tk.LEFT, padx=(0, 10))
             
-            # Hace que todo el frame sea clickeable
             def on_click(e=None):
                 right_button_command()
             
@@ -490,7 +487,6 @@ class BaseSystem:
         """Abre ventana de productos - DEBE SER SOBRESCRITO"""
         print(f"[{self.system_name}] open_productos no implementado")
     
-    # MÉTODOS COMUNES
     def openMarcasWindow(self):
         """Abre la ventana de gestión de marcas"""
         try:

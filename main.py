@@ -13,7 +13,6 @@ class MainApp:
         self.root = root
         self.root.title("Sistema de Inventario")
         
-        # DEBUG: Mostrar información del sistema
         print("=" * 60)
         print("DEBUG - Información del sistema:")
         print(f"Carpeta actual (os.getcwd()): {os.getcwd()}")
@@ -25,24 +24,18 @@ class MainApp:
             print("No se pudo listar archivos")
         print("=" * 60)
         
-        # Verificar conexión primero
         self.db_status = self.check_database_connection()
         
-        # Si no hay conexión, db_status será False y no continuamos
         if self.db_status is False:
             return
         
-        # Configurar ventana principal con dimensiones del sistema
         self.root.geometry(f"{styles.ANCHO_VENTANA_SISTEMA}x{styles.ALTO_VENTANA_SISTEMA}")
         self.root.configure(bg=styles.COLOR_FONDO_OSCURO)  # Mismo fondo que sistemas internos
         
-        # Centrar ventana
         self.center_window(styles.ANCHO_VENTANA_SISTEMA, styles.ALTO_VENTANA_SISTEMA)
         
-        # Cargar logo
         self.logo_image = self.load_logo()
         
-        # Mostrar pantalla de selección con nuevo diseño
         self.show_system_selection()
     
     def load_logo(self):
@@ -157,21 +150,16 @@ class MainApp:
         try:
             from PIL import Image, ImageDraw
             
-            # Crear una imagen simple
             width = 400
             height = 115
             
-            # Crear imagen con fondo morado
             img = Image.new('RGB', (width, height), color=(44, 18, 97))  # COLOR_FONDO_OSCURO
             
-            # Dibujar texto simple
             draw = ImageDraw.Draw(img)
             
-            # Intentar usar una fuente
             try:
                 from PIL import ImageFont
                 
-                # Intentar fuentes comunes
                 font_paths = [
                     "arial.ttf",
                     "C:/Windows/Fonts/arial.ttf",
@@ -189,17 +177,14 @@ class MainApp:
                         continue
                 
                 if font:
-                    # Texto con fuente
                     draw.text((20, 20), "Guias y Scouts de Costa Rica", fill="white", font=font)
                     draw.text((20, 50), "Institución Benemérita", fill="white", font=font)
                     draw.text((20, 80), "Sistema de Inventario", fill="#04bc99", font=font)
                 else:
-                    # Texto sin fuente
                     draw.text((20, 40), "Sistema de Inventario", fill="white")
                     draw.text((20, 70), "Logo no encontrado", fill="#ffa400")
                     
             except ImportError:
-                # Si no hay PIL o no funciona
                 draw.text((20, 40), "Sistema de Inventario", fill="white")
                 draw.text((20, 70), "Versión sin logo", fill="#ffa400")
             
@@ -236,14 +221,12 @@ class MainApp:
         error_window.geometry("500x250")
         error_window.configure(bg=styles.COLOR_FONDO)
         
-        # Centrar ventana de error
         screen_width = error_window.winfo_screenwidth()
         screen_height = error_window.winfo_screenheight()
         x = (screen_width // 2) - (500 // 2)
         y = (screen_height // 2) - (250 // 2)
         error_window.geometry(f"500x250+{x}+{y}")
         
-        # Contenido del mensaje de error
         tk.Label(error_window, 
                 text="ERROR DE CONEXION", 
                 font=(styles.FUENTE_PRINCIPAL, 16, styles.PESO_NEGRITA),
@@ -256,7 +239,6 @@ class MainApp:
                 bg=styles.COLOR_FONDO, 
                 fg=styles.COLOR_TEXTO_OSCURO).pack(pady=5)
         
-        # Mensaje detallado
         error_frame = tk.Frame(error_window, bg=styles.COLOR_ALARMA_FONDO, bd=1, relief=tk.SUNKEN)
         error_frame.pack(padx=30, pady=10, fill=tk.BOTH, expand=True)
         
@@ -268,7 +250,6 @@ class MainApp:
                 wraplength=400,
                 justify=tk.LEFT).pack(padx=10, pady=10)
         
-        # Botón para salir
         tk.Button(error_window, 
                  text="Salir", 
                  font=(styles.FUENTE_PRINCIPAL, 10),
@@ -277,7 +258,6 @@ class MainApp:
                  command=lambda: [error_window.destroy(), self.root.quit()],
                  width=15).pack(pady=20)
         
-        # Cerrar ventana principal
         self.root.withdraw()
         error_window.mainloop()
     
@@ -295,17 +275,14 @@ class MainApp:
         """Muestra pantalla de selección de sistema con diseño moderno"""
         self.clear_window()
         
-        # Frame principal con fondo MORADO OSCURO (igual que sistemas internos)
         self.main_frame = tk.Frame(self.root, 
                                   bg=styles.COLOR_FONDO_OSCURO,
                                   padx=0,
                                   pady=0)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # 1. ENCABEZADO CON LOGO (NUEVO DISEÑO)
         self.create_header()
         
-        # 2. CONTENIDO PRINCIPAL (contenedor blanco)
         content_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
         content_frame.pack(fill=tk.BOTH, expand=True, pady=0, padx=25)
         
@@ -315,7 +292,6 @@ class MainApp:
                                pady=40)
         inner_content.pack(fill=tk.BOTH, expand=True)
         
-        # 3. TÍTULO CON BORDE INFERIOR (estilo igual a sistemas internos)
         title_container = tk.Frame(inner_content, bg=styles.COLOR_FONDO)
         title_container.pack(fill=tk.X, pady=(0, 40))  # Más espacio debajo
         
@@ -327,7 +303,6 @@ class MainApp:
                              anchor="w")
         main_title.pack(side=tk.TOP, fill=tk.X)
         
-        # Línea decorativa doble (estilo sistemas internos)
         line_frame = tk.Frame(title_container, bg=styles.COLOR_FONDO, height=3)
         line_frame.pack(side=tk.TOP, fill=tk.X, pady=(8, 0))
         
@@ -337,16 +312,13 @@ class MainApp:
         accent_line = tk.Frame(line_frame, bg=styles.COLOR_BOTON_1, height=3)
         accent_line.place(x=0, y=0, width=120, height=3)
         
-        # 4. BOTONES DE SISTEMAS (DISEÑO ESPECIAL)
         buttons_container = tk.Frame(inner_content, bg=styles.COLOR_FONDO)
         buttons_container.pack(fill=tk.BOTH, expand=True)
         
-        # Configurar grid para dos columnas
         buttons_container.grid_columnconfigure(0, weight=1)
         buttons_container.grid_columnconfigure(1, weight=1)
         buttons_container.grid_rowconfigure(0, weight=1)
         
-        # BOTÓN TIENDA (diseño especial)
         tienda_frame = tk.Frame(buttons_container, 
                                bg=styles.COLOR_TIENDA,
                                relief=tk.FLAT)
@@ -355,7 +327,6 @@ class MainApp:
         tienda_content = tk.Frame(tienda_frame, bg=styles.COLOR_TIENDA)
         tienda_content.pack(fill=tk.BOTH, expand=True, padx=30, pady=40)
         
-        # Icono/imagen para TIENDA (usando texto como placeholder)
         tk.Label(tienda_content,
                 text="🛒",  # Puedes cambiar por un icono real si lo tienes
                 font=("Arial", 48),
@@ -390,12 +361,10 @@ class MainApp:
                               pady=12)
         btn_tienda.pack()
         
-        # Hacer todo el frame clickeable
         tienda_frame.bind("<Button-1>", lambda e: self.open_tienda_login())
         for widget in tienda_frame.winfo_children():
             widget.bind("<Button-1>", lambda e: self.open_tienda_login())
         
-        # BOTÓN RA-PE (diseño especial)
         rape_frame = tk.Frame(buttons_container,
                              bg=styles.COLOR_RAPE,
                              relief=tk.FLAT)
@@ -404,7 +373,6 @@ class MainApp:
         rape_content = tk.Frame(rape_frame, bg=styles.COLOR_RAPE)
         rape_content.pack(fill=tk.BOTH, expand=True, padx=30, pady=40)
         
-        # Icono/imagen para RA-PE
         tk.Label(rape_content,
                 text="🔧",  # Puedes cambiar por un icono real si lo tienes
                 font=("Arial", 48),
@@ -439,12 +407,10 @@ class MainApp:
                             pady=12)
         btn_rape.pack()
         
-        # Hacer todo el frame clickeable
         rape_frame.bind("<Button-1>", lambda e: self.open_rape_login())
         for widget in rape_frame.winfo_children():
             widget.bind("<Button-1>", lambda e: self.open_rape_login())
         
-        # 5. BOTÓN SALIR ABAJO A LA DERECHA (FUERA DE LA BARRA DE ESTADO)
         bottom_container = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO_OSCURO)
         bottom_container.pack(fill=tk.X, padx=25, pady=(0, 15))
         
@@ -461,7 +427,6 @@ class MainApp:
                             pady=10)
         btn_exit.pack(side=tk.RIGHT)
         
-        # 6. BARRA DE ESTADO INFERIOR (SIMPLIFICADA)
         self.create_status_bar(self.main_frame)
     
     def create_header(self):
@@ -510,7 +475,6 @@ class MainApp:
         status_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=(0, 5))
         status_frame.pack_propagate(False)
         
-        # Estado de conexión (solo icono y texto breve)
         if "Conectado" in self.db_status:
             status_color = styles.COLOR_EXITO
             status_text = "✓ Conectado"
@@ -525,14 +489,12 @@ class MainApp:
                                fg=status_color)
         status_label.pack(side=tk.LEFT, padx=(10, 0), pady=5)
         
-        # Separador
         separator = tk.Frame(status_frame,
                             bg=styles.COLOR_TEXTO_CLARO,
                             width=1,
                             height=15)
         separator.pack(side=tk.LEFT, padx=10, pady=5)
         
-        # Información del sistema
         info_label = tk.Label(status_frame,
                              text="v1.0 | © 2026",
                              font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO, styles.PESO_NORMAL),

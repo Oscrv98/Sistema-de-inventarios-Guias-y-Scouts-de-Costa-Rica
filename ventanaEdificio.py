@@ -13,7 +13,6 @@ class VentanaEdificio:
         self.systemName = systemName
         self.db = Database()
         
-        # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(f"Gestión de Edificios - {systemName}")
         self.window.geometry("1000x700")
@@ -23,10 +22,8 @@ class VentanaEdificio:
         self.window.transient(parent)
         self.window.grab_set()
         
-        # Centrar ventana
         self.centerWindow(600, 400)
         
-        # Crear interfaz principal
         self.createWidgets()
         self.loadEdificios()
     
@@ -40,11 +37,9 @@ class VentanaEdificio:
     
     def createWidgets(self):
         """Crea todos los widgets de la ventana principal"""
-        # Frame principal
         mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO_OSCURO, padx=20, pady=20)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
         title = tk.Label(mainFrame, 
                         text="GESTIÓN DE EDIFICIOS", 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
@@ -52,11 +47,9 @@ class VentanaEdificio:
                         fg=styles.COLOR_BLANCO)
         title.pack(pady=(0, 20))
         
-        # Frame para botones de acción principales
         buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         buttonFrame.pack(fill=tk.X, pady=(0, 15))
         
-        # Botón Agregar Edificio
         self.btnAgregar = tk.Button(buttonFrame, 
                                     text="Agregar Nuevo Edificio", 
                                     font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -66,7 +59,6 @@ class VentanaEdificio:
                                     command=self.abrirAgregarEdificio)
         self.btnAgregar.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Botón Editar
         self.btnEditar = tk.Button(buttonFrame, 
                                    text="Editar Edificio", 
                                    font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -77,7 +69,6 @@ class VentanaEdificio:
                                    command=self.abrirEditarEdificio)
         self.btnEditar.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Botón Cerrar
         btnCerrar = tk.Button(buttonFrame, 
                               text="Cerrar", 
                               font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -87,19 +78,15 @@ class VentanaEdificio:
                               command=self.window.destroy)
         btnCerrar.pack(side=tk.RIGHT)
         
-        # Separador
         separator = tk.Frame(mainFrame, height=2, bg=styles.COLOR_BORDE)
         separator.pack(fill=tk.X, pady=(0, 10))
         
-        # Frame para la tabla (Treeview)
         tableFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         tableFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Crear Treeview con más columnas
         columns = ("ID", "Nombre", "Dirección", "Tipo", "Inventario")
         self.tree = ttk.Treeview(tableFrame, columns=columns, show="headings", height=15)
         
-        # Configurar columnas
         column_widths = [80, 200, 250, 150, 200]
         column_names = ["ID", "Nombre del Edificio", "Dirección", "Tipo", "Sistema Inventario"]
         
@@ -107,11 +94,9 @@ class VentanaEdificio:
             self.tree.heading(col, text=name)
             self.tree.column(col, width=width, anchor="center")
 
-        # Configurar estilo para el Treeview
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Configurar estilo global para Treeview
         style.configure("Treeview",
                         background=styles.COLOR_FONDO,
                         foreground=styles.COLOR_TEXTO_OSCURO,
@@ -119,7 +104,6 @@ class VentanaEdificio:
                         borderwidth=1,
                         rowheight=25)
         
-        # Configurar específicamente los headings
         style.configure("Treeview.Heading", 
                         background=styles.COLOR_TREEVIEW_HEADING,
                         foreground=styles.COLOR_BLANCO,
@@ -127,32 +111,25 @@ class VentanaEdificio:
                         relief="flat",
                         padding=(5, 5))
         
-        # Configurar color de selección
         style.map('Treeview',
                   background=[('selected', styles.COLOR_TREEVIEW_SELECTION)],
                   foreground=[('selected', styles.COLOR_TEXTO_OSCURO)])
         
-        # Configurar colores para filas alternas
         self.tree.tag_configure('odd', background=styles.COLOR_TREEVIEW_ODD)
         self.tree.tag_configure('even', background=styles.COLOR_TREEVIEW_EVEN)
 
-        # Scrollbar
         scrollbar = ttk.Scrollbar(tableFrame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Layout Treeview y Scrollbar
         self.tree.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
         
-        # Configurar grid para expansión
         tableFrame.grid_rowconfigure(0, weight=1)
         tableFrame.grid_columnconfigure(0, weight=1)
         
-        # Frame para botones inferiores
         bottomFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO_OSCURO)
         bottomFrame.pack(fill=tk.X, pady=(10, 0))
         
-        # Botón Eliminar
         self.btnEliminar = tk.Button(bottomFrame, 
                                      text="Eliminar Edificio Seleccionado", 
                                      font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -163,10 +140,8 @@ class VentanaEdificio:
                                      command=self.eliminarEdificio)
         self.btnEliminar.pack(side=tk.LEFT, padx=(0, 20))
         
-        # Evento de selección en Treeview
         self.tree.bind("<<TreeviewSelect>>", self.onTreeSelect)
         
-        # Variables para control de edición
         self.edificioSeleccionado = None
     
     def loadEdificios(self):
@@ -199,11 +174,9 @@ class VentanaEdificio:
         """Maneja la selección de un edificio en el Treeview"""
         selection = self.tree.selection()
         if selection:
-            # Habilitar botones de edición y eliminación
             self.btnEditar.config(state=tk.NORMAL)
             self.btnEliminar.config(state=tk.NORMAL)
             
-            # Guardar el edificio seleccionado
             item = self.tree.item(selection[0])
             self.edificioSeleccionado = item['values'][0]
         else:
@@ -265,7 +238,6 @@ class VentanaDetalleEdificio:
         self.callback_obj = callback_obj
         self.db = Database()
         
-        # Crear ventana emergente
         self.window = tk.Toplevel(parent)
         self.window.title(titulo)
         self.window.geometry("500x400")
@@ -273,10 +245,8 @@ class VentanaDetalleEdificio:
         self.window.transient(parent)
         self.window.grab_set()
         
-        # Centrar ventana
         self.centerWindow(500, 400)
         
-        # Crear interfaz
         self.createWidgets()
         self.loadDatos()
     
@@ -290,11 +260,9 @@ class VentanaDetalleEdificio:
     
     def createWidgets(self):
         """Crea todos los widgets de la ventana"""
-        # Frame principal
         mainFrame = tk.Frame(self.window, bg=styles.COLOR_FONDO, padx=30, pady=30)
         mainFrame.pack(fill=tk.BOTH, expand=True)
         
-        # Título
         title = tk.Label(mainFrame, 
                         text=self.titulo, 
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_SUBTITULO, styles.PESO_NEGRITA),
@@ -302,11 +270,9 @@ class VentanaDetalleEdificio:
                         fg=styles.COLOR_TEXTO_OSCURO)
         title.pack(pady=(0, 25))
         
-        # Frame para formulario
         formFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         formFrame.pack(fill=tk.X)
         
-        # Campo: Nombre del Edificio
         tk.Label(formFrame, 
                 text="Nombre del Edificio:", 
                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -320,7 +286,6 @@ class VentanaDetalleEdificio:
                                     width=30)
         self.nombreEntry.grid(row=0, column=1, pady=10, sticky="w")
         
-        # Campo: Dirección
         tk.Label(formFrame, 
                 text="Dirección:", 
                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -334,7 +299,6 @@ class VentanaDetalleEdificio:
                                        width=30)
         self.direccionEntry.grid(row=1, column=1, pady=10, sticky="w")
         
-        # Campo: Tipo (Combobox)
         tk.Label(formFrame, 
                 text="Tipo:", 
                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -350,7 +314,6 @@ class VentanaDetalleEdificio:
         self.tipoCombobox['values'] = ('Bodega', 'Armarios', 'Almacen')
         self.tipoCombobox.grid(row=2, column=1, pady=10, sticky="w")
         
-        # Campo: Inventario (Combobox)
         tk.Label(formFrame, 
                 text="Sistema Inventario:", 
                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -364,11 +327,9 @@ class VentanaDetalleEdificio:
                                               state="readonly")
         self.inventarioCombobox.grid(row=3, column=1, pady=10, sticky="w")
         
-        # Frame para botones
         buttonFrame = tk.Frame(mainFrame, bg=styles.COLOR_FONDO)
         buttonFrame.pack(fill=tk.X, pady=(30, 0))
         
-        # Botón Guardar
         btnGuardar = tk.Button(buttonFrame, 
                               text="Guardar", 
                               font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -378,7 +339,6 @@ class VentanaDetalleEdificio:
                               command=self.guardarEdificio)
         btnGuardar.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Botón Cancelar
         btnCancelar = tk.Button(buttonFrame, 
                                text="Cancelar", 
                                font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
@@ -416,7 +376,6 @@ class VentanaDetalleEdificio:
     
     def guardarEdificio(self):
         """Guarda o actualiza el edificio"""
-        # Validar campos
         nombre = self.nombreVar.get().strip()
         direccion = self.direccionVar.get().strip()
         tipo = self.tipoVar.get()
@@ -442,7 +401,6 @@ class VentanaDetalleEdificio:
             self.inventarioCombobox.focus()
             return
         
-        # Obtener ID del inventario
         id_inventario = self.inventario_dict.get(inventario_nombre)
         if not id_inventario:
             messagebox.showerror("Error", "Sistema de inventario no válido")
@@ -450,7 +408,6 @@ class VentanaDetalleEdificio:
         
         try:
             if self.edificio_id:
-                # Actualizar edificio existente - ahora retorna tupla (success, mensaje)
                 resultado = self.db.update_edificio(self.edificio_id, nombre, direccion, tipo, id_inventario)
                 
                 if resultado[0]:  # Si success es True
@@ -463,7 +420,6 @@ class VentanaDetalleEdificio:
                     success, mensaje_error = resultado
                     messagebox.showerror("Error", mensaje_error)
             else:
-                # Crear nuevo edificio - ahora retorna tupla (id, mensaje) o (None, mensaje_error)
                 resultado = self.db.create_edificio(nombre, direccion, tipo, id_inventario)
                 
                 if resultado[0]:  # Si hay ID (éxito)

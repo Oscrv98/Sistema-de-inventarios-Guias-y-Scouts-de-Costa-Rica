@@ -8,26 +8,21 @@ class VentanaProductosRaPe:
         self.system_name = system_name
         self.materiales_data = []  # Almacenar datos completos para filtrado
         
-        # Configurar ventana
         self.window = tk.Toplevel(root)
         self.window.title(f"Materiales RA-PE - {system_name}")
         
-        # Tamaño grande desde el inicio
         self.window.geometry("1500x900")
         self.window.minsize(1450, 850)
         
-        # Centrar ventana usando nuestra función
         self.centerWindow(1500, 900)
         
         self.window.configure(bg=styles.COLOR_FONDO_OSCURO)
         self.window.transient(root)
         self.window.grab_set()
         
-        # Frame principal
         self.main_frame = tk.Frame(self.window, bg=styles.COLOR_FONDO_OSCURO, padx=20, pady=20)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Título con color del sistema RA-PE - ¡CORREGIDO!
         color_sistema = styles.COLOR_RAPE  # Es COLOR_RAPE, no COLOR_RA_PE
         title_frame = tk.Frame(self.main_frame, bg=color_sistema)
         title_frame.pack(fill=tk.X, pady=(0, 20))
@@ -40,13 +35,9 @@ class VentanaProductosRaPe:
                                   padx=20, pady=10)
         self.lbl_titulo.pack()
         
-        # ============================================
-        # BARRA SUPERIOR DE CONTROLES
-        # ============================================
         top_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO_OSCURO)
         top_frame.pack(fill=tk.X, pady=(0, 15))
         
-        # Botones a la izquierda
         btn_frame_left = tk.Frame(top_frame, bg=styles.COLOR_FONDO_OSCURO)
         btn_frame_left.pack(side=tk.LEFT)
         
@@ -85,7 +76,6 @@ class VentanaProductosRaPe:
                                      command=self.ver_detalles)
         self.btn_detalles.pack(side=tk.LEFT)
         
-        # Barra de búsqueda a la derecha
         search_frame = tk.Frame(top_frame, bg=styles.COLOR_FONDO_OSCURO)
         search_frame.pack(side=tk.RIGHT)
         
@@ -105,29 +95,21 @@ class VentanaProductosRaPe:
         self.entry_buscar.insert(0, "Buscar por nombre, marca o categoría...")
         self.entry_buscar.config(fg="grey")
         
-        # Eventos para el placeholder
         self.entry_buscar.bind("<FocusIn>", self.on_entry_focus_in)
         self.entry_buscar.bind("<FocusOut>", self.on_entry_focus_out)
         self.entry_buscar.bind("<KeyRelease>", self.filtrar_tabla)
         
-        # ============================================
-        # TABLA DE MATERIALES - VERSIÓN SIMPLE QUE FUNCIONA
-        # ============================================
         table_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
         table_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Scrollbars
         v_scrollbar = ttk.Scrollbar(table_frame, orient="vertical")
         v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         h_scrollbar = ttk.Scrollbar(table_frame, orient="horizontal")
         h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
         
-        # Treeview - ENFOQUE DIRECTO
-        # Configurar el Treeview de manera FORZADA
         style = ttk.Style()
         
-        # PRIMER INTENTO: Configurar estilo básico
         style.configure("Treeview",
                        font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL),
                        rowheight=25,
@@ -135,7 +117,6 @@ class VentanaProductosRaPe:
                        fieldbackground="white",
                        foreground=styles.COLOR_TEXTO_OSCURO)
         
-        # Configurar headings específicamente
         style.configure("Treeview.Heading",
                        font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                        background=styles.COLOR_TREEVIEW_HEADING,
@@ -143,14 +124,12 @@ class VentanaProductosRaPe:
                        relief="flat",
                        padding=(5, 5))
         
-        # Usar map para asegurar colores
         style.map('Treeview.Heading',
                  background=[('active', styles.COLOR_TREEVIEW_HEADING),
                             ('!active', styles.COLOR_TREEVIEW_HEADING)],
                  foreground=[('active', styles.COLOR_BLANCO),
                             ('!active', styles.COLOR_BLANCO)])
         
-        # Crear Treeview normal - Columnas simplificadas para RA-PE
         self.tree = ttk.Treeview(table_frame,
                                 columns=("ID", "Nombre", "Marca", "Categoría", 
                                         "Stock", "Alarma"),
@@ -162,7 +141,6 @@ class VentanaProductosRaPe:
         v_scrollbar.config(command=self.tree.yview)
         h_scrollbar.config(command=self.tree.xview)
         
-        # Configurar columnas
         column_widths = {
             "ID": 60,
             "Nombre": 300,
@@ -180,15 +158,10 @@ class VentanaProductosRaPe:
         
         self.tree.pack(fill=tk.BOTH, expand=True)
         
-        # Evento de selección
         self.tree.bind("<<TreeviewSelect>>", self.on_item_selected)
         
-        # Forzar colores después de mostrar
         self.window.after(100, self.forzar_colores_heading)
         
-        # ============================================
-        # BARRA INFERIOR DE CONTROLES
-        # ============================================
         bottom_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO_OSCURO)
         bottom_frame.pack(fill=tk.X, pady=(20, 0))
         
@@ -215,7 +188,6 @@ class VentanaProductosRaPe:
                                    command=self.window.destroy)
         self.btn_cerrar.pack(side=tk.RIGHT)
         
-        # Cargar datos
         self.cargar_materiales()
     
     def forzar_colores_heading(self):
@@ -249,9 +221,6 @@ class VentanaProductosRaPe:
         y = (screenHeight // 2) - (height // 2)
         self.window.geometry(f"{width}x{height}+{x}+{y}")
     
-    # ============================================
-    # MÉTODOS PARA BÚSQUEDA
-    # ============================================
     
     def on_entry_focus_in(self, event):
         """Maneja el foco en el campo de búsqueda"""
@@ -363,9 +332,6 @@ class VentanaProductosRaPe:
             self.btn_detalles.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
     
-    # ============================================
-    # MÉTODOS CRUD
-    # ============================================
     
     def agregar_material(self):
         """Abre ventana para agregar material"""
