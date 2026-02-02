@@ -6,7 +6,7 @@ import styles
 from tiendaDef import TiendaSystem
 from rapeDef import RAPESystem
 from db import Database
-from PIL import Image, ImageTk  # Necesitarás: pip install pillow
+from PIL import Image, ImageTk 
 
 class MainApp:
     def __init__(self, root):
@@ -113,7 +113,7 @@ class MainApp:
         print(f"\nProbando {len(unique_paths)} rutas posibles...")
         print("-" * 60)
         
-        for i, path in enumerate(unique_paths[:20]):  # Solo probar primeras 20
+        for i, path in enumerate(unique_paths[:20]):  
             try:
                 if os.path.exists(path):
                     print(f"✓ [{i+1}] ¡ENCONTRADO! en: {path}")
@@ -153,7 +153,7 @@ class MainApp:
             width = 400
             height = 115
             
-            img = Image.new('RGB', (width, height), color=(44, 18, 97))  # COLOR_FONDO_OSCURO
+            img = Image.new('RGB', (width, height), color=(44, 18, 97))  
             
             draw = ImageDraw.Draw(img)
             
@@ -205,7 +205,7 @@ class MainApp:
                 print("Conexion establecida correctamente")
                 return "Conectado a BD"
             else:
-                # Mostrar ventana de error
+               
                 self.show_connection_error(message)
                 return False
                 
@@ -328,7 +328,7 @@ class MainApp:
         tienda_content.pack(fill=tk.BOTH, expand=True, padx=30, pady=40)
         
         tk.Label(tienda_content,
-                text="🛒",  # Puedes cambiar por un icono real si lo tienes
+                text="🛒", 
                 font=("Arial", 48),
                 bg=styles.COLOR_TIENDA,
                 fg=styles.COLOR_BLANCO).pack(pady=(0, 20))
@@ -374,7 +374,7 @@ class MainApp:
         rape_content.pack(fill=tk.BOTH, expand=True, padx=30, pady=40)
         
         tk.Label(rape_content,
-                text="🔧",  # Puedes cambiar por un icono real si lo tienes
+                text="🔧",  
                 font=("Arial", 48),
                 bg=styles.COLOR_RAPE,
                 fg=styles.COLOR_BLANCO).pack(pady=(0, 20))
