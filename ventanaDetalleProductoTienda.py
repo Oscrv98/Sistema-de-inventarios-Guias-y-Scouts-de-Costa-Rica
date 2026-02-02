@@ -290,7 +290,7 @@ class VentanaDetalleProductoTienda:
         return False
     
     def guardarProducto(self):
-        """Guarda o actualiza el producto - VERSIÓN CORREGIDA"""
+        """Guarda o actualiza el producto - VERSIÓN CORREGIDA PARA TUPLAS"""
         # Validar campos requeridos
         nombre = self.nombreVar.get().strip()
         if not nombre:
@@ -330,13 +330,15 @@ class VentanaDetalleProductoTienda:
         
         try:
             if self.producto_id:
-                # Actualizar producto existente
-                success = self.db.update_producto_tienda(
+                # Actualizar producto existente - ahora retorna tupla (success, mensaje)
+                resultado = self.db.update_producto_tienda(
                     self.producto_id, nombre, id_marca, id_categoria, 
                     precio_venta, precio_compra, color, talla, alarma_cap
                 )
-                if success:
-                    messagebox.showinfo("Éxito", f"Producto '{nombre}' actualizado exitosamente")
+                
+                if resultado[0]:  # Si success es True
+                    success, mensaje = resultado
+                    messagebox.showinfo("Éxito", mensaje)
                     
                     # Actualizar tabla principal
                     if self.callback_obj and hasattr(self.callback_obj, 'loadProductos'):
@@ -346,15 +348,19 @@ class VentanaDetalleProductoTienda:
                     self.actualizarAlarmasSiEstanAbiertas()
                     
                     self.window.destroy()
-                else:
-                    messagebox.showerror("Error", "No se pudo actualizar el producto")
+                else:  # Si success es False
+                    success, mensaje_error = resultado
+                    messagebox.showerror("Error", mensaje_error)
             else:
-                # Crear nuevo producto
-                producto_id = self.db.create_producto_tienda(
+                # Crear nuevo producto - ahora retorna tupla (id, mensaje) o (None, mensaje_error)
+                resultado = self.db.create_producto_tienda(
                     nombre, id_marca, id_categoria, precio_venta, 
                     precio_compra, color, talla, alarma_cap
                 )
-                if producto_id:
+                
+                if resultado[0]:  # Si hay ID (éxito)
+                    producto_id, mensaje = resultado
+                    
                     # Crear inventario para todos los edificios TIENDA
                     success = self.db.create_inventario_para_edificios_tienda(producto_id)
                     
@@ -375,8 +381,9 @@ class VentanaDetalleProductoTienda:
                         self.actualizarAlarmasSiEstanAbiertas()
                         
                         self.window.destroy()
-                else:
-                    messagebox.showerror("Error", "No se pudo crear el producto")
+                else:  # Si no hay ID (error)
+                    producto_id, mensaje_error = resultado
+                    messagebox.showerror("Error", mensaje_error)
                     
         except Exception as e:
             messagebox.showerror("Error", f"Error al guardar producto: {e}")

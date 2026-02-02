@@ -450,25 +450,31 @@ class VentanaDetalleEdificio:
         
         try:
             if self.edificio_id:
-                # Actualizar edificio existente
-                success = self.db.update_edificio(self.edificio_id, nombre, direccion, tipo, id_inventario)
-                if success:
-                    messagebox.showinfo("Éxito", f"Edificio '{nombre}' actualizado exitosamente")
+                # Actualizar edificio existente - ahora retorna tupla (success, mensaje)
+                resultado = self.db.update_edificio(self.edificio_id, nombre, direccion, tipo, id_inventario)
+                
+                if resultado[0]:  # Si success es True
+                    success, mensaje = resultado
+                    messagebox.showinfo("Éxito", mensaje)
                     self.window.destroy()
                     if self.callback_obj:
                         self.callback_obj.loadEdificios()
-                else:
-                    messagebox.showerror("Error", "No se pudo actualizar el edificio")
+                else:  # Si success es False
+                    success, mensaje_error = resultado
+                    messagebox.showerror("Error", mensaje_error)
             else:
-                # Crear nuevo edificio
-                edificioId = self.db.create_edificio(nombre, direccion, tipo, id_inventario)
-                if edificioId:
-                    messagebox.showinfo("Éxito", f"Edificio '{nombre}' creado exitosamente")
+                # Crear nuevo edificio - ahora retorna tupla (id, mensaje) o (None, mensaje_error)
+                resultado = self.db.create_edificio(nombre, direccion, tipo, id_inventario)
+                
+                if resultado[0]:  # Si hay ID (éxito)
+                    edificioId, mensaje = resultado
+                    messagebox.showinfo("Éxito", mensaje)
                     self.window.destroy()
                     if self.callback_obj:
                         self.callback_obj.loadEdificios()
-                else:
-                    messagebox.showerror("Error", "No se pudo crear el edificio")
+                else:  # Si no hay ID (error)
+                    edificioId, mensaje_error = resultado
+                    messagebox.showerror("Error", mensaje_error)
                     
         except Exception as e:
             messagebox.showerror("Error", f"Error al guardar edificio: {e}")

@@ -12,19 +12,19 @@ class BaseSystem:
         # Obtener color según sistema
         self.system_color = styles.COLOR_TIENDA if system_name.upper() == "TIENDA" else styles.COLOR_RAPE
         
-        # Configurar ventana con fondo MORADO OSCURO
+        
         self.root.title(f"Sistema {system_name}")
         self.root.geometry(f"{styles.ANCHO_VENTANA_SISTEMA}x{styles.ALTO_VENTANA_SISTEMA}")
         self.root.configure(bg=styles.COLOR_FONDO_OSCURO)
         
-        # Frame principal SIN PADDING y con fondo MORADO OSCURO
+        
         self.main_frame = tk.Frame(self.root, 
                                   bg=styles.COLOR_FONDO_OSCURO,
                                   padx=0,
                                   pady=0)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Crear componentes básicos
+        # componentes básicos
         if custom_header_button:
             self.create_header(custom_header_button['text'], custom_header_button['command'])
         else:
@@ -61,14 +61,14 @@ class BaseSystem:
                                         fg=status_color)
         self.connection_status.pack(side=tk.LEFT, padx=(10, 0), pady=8)
         
-        # Separador
+        
         separator = tk.Frame(status_frame, 
                             bg=styles.COLOR_TEXTO_CLARO, 
                             width=1,
                             height=20)
         separator.pack(side=tk.LEFT, padx=10, pady=8)
         
-        # Nombre del sistema
+        
         system_label = tk.Label(status_frame, 
                             text=f"Sistema: {self.system_name}", 
                             font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_MUY_PEQUENO, styles.PESO_NORMAL),
@@ -84,7 +84,7 @@ class BaseSystem:
         header_frame.pack(fill=tk.X, padx=10, pady=0)
         header_frame.pack_propagate(False)
         
-        # TÍTULO DEL SISTEMA
+        
         title = tk.Label(header_frame,
                         text=f"SISTEMA {self.system_name}",
                         font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_TITULO, styles.PESO_NEGRITA),
@@ -92,19 +92,19 @@ class BaseSystem:
                         fg=styles.COLOR_BLANCO)
         title.pack(side=tk.LEFT, padx=20, pady=15)
         
-        # Botón derecho: EXPORTAR EXCEL compacto con emoji más grande
+      
         if right_button_text:
-            # Crear un Frame que actúe como botón (para poder tener diferentes fuentes)
+            
             btn_frame = tk.Frame(header_frame,
                             bg=styles.COLOR_BLANCO,
                             relief=tk.FLAT,
                             bd=0)
             btn_frame.pack(side=tk.RIGHT, padx=20, pady=15)
             
-            # Configurar cursor de mano
+            
             btn_frame.config(cursor="hand2")
             
-            # Emoji con fuente GRANDE
+           
             emoji_label = tk.Label(btn_frame,
                                 text="📥",
                                 font=("Segoe UI Emoji", 18),  # Más grande
@@ -112,7 +112,7 @@ class BaseSystem:
                                 fg=self.system_color)
             emoji_label.pack(side=tk.LEFT, padx=(10, 5))
             
-            # Texto con fuente normal
+            
             text_label = tk.Label(btn_frame,
                                 text=right_button_text,
                                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
@@ -120,7 +120,7 @@ class BaseSystem:
                                 fg=self.system_color)
             text_label.pack(side=tk.LEFT, padx=(0, 10))
             
-            # Hacer que todo el frame sea clickeable
+            # Hace que todo el frame sea clickeable
             def on_click(e=None):
                 right_button_command()
             
@@ -128,7 +128,7 @@ class BaseSystem:
             emoji_label.bind("<Button-1>", on_click)
             text_label.bind("<Button-1>", on_click)
             
-            # Efecto hover (cambia color al pasar el mouse)
+            
             def on_enter(e):
                 btn_frame.config(bg=styles.COLOR_FONDO_GRIS)
                 emoji_label.config(bg=styles.COLOR_FONDO_GRIS)
@@ -148,18 +148,18 @@ class BaseSystem:
 
     def create_menu_container(self):
         """Crea el contenedor para el menú con distribución 2x2 MEJORADA"""
-        # Frame del menú con fondo BLANCO
+       
         self.menu_frame = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
         self.menu_frame.pack(fill=tk.BOTH, expand=True, pady=0, padx=25)
         
-        # Frame interno
+        
         self.inner_frame = tk.Frame(self.menu_frame,
                                 bg=styles.COLOR_FONDO,
                                 padx=25,
                                 pady=20)
         self.inner_frame.pack(fill=tk.BOTH, expand=True)
         
-        # TÍTULO CON BORDE INFERIOR MEJORADO
+        
         title_container = tk.Frame(self.inner_frame, bg=styles.COLOR_FONDO)
         title_container.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 20))
         
@@ -171,44 +171,44 @@ class BaseSystem:
                              anchor="w")
         menu_title.pack(side=tk.TOP, fill=tk.X)
         
-        # Línea decorativa doble
+       
         line_frame = tk.Frame(title_container, bg=styles.COLOR_FONDO, height=3)
         line_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
         
-        # Línea principal (color del sistema)
+       
         main_line = tk.Frame(line_frame, bg=self.system_color, height=3)
         main_line.pack(side=tk.TOP, fill=tk.X)
         
-        # Línea de acento (morado)
+       
         accent_line = tk.Frame(line_frame, bg=styles.COLOR_BOTON_1, height=3)
         accent_line.place(x=0, y=0, width=120, height=3)
         
-        # Crear botones del menú
+        
         self.create_menu_buttons()
     
     def create_menu_buttons(self):
         """Crea los botones del menú en distribución 2x2 con emojis centrados"""
-        # Configurar grid para 2x2
+       
         for i in range(2):
             self.inner_frame.grid_columnconfigure(i, weight=1)
             self.inner_frame.grid_rowconfigure(i+1, weight=1)
         
-        # Determinar texto y EMOJI según sistema
+        
         if self.system_name == "RA-PE":
             productos_text = "MATERIALES RA-PE"
-            producto_emoji = "📦"  # Caja para RA-PE
+            producto_emoji = "📦"  
         else:
             productos_text = "PRODUCTOS TIENDA"
-            producto_emoji = "🛍️"  # Bolsa de compras para Tienda
+            producto_emoji = "🛍️"  
         
-        # FUNCIÓN PARA CREAR BOTONES CON CONTENIDO CENTRADO
+       
         def create_button_with_large_emoji(parent, emoji, text, bg_color, command):
             """Crea un botón con emoji grande y texto normal - TODO CENTRADO"""
-            # Usamos un Frame como contenedor
+            
             btn_frame = tk.Frame(parent, bg=bg_color)
             
-            # AJUSTAR TAMAÑO DE FUENTE SEGÚN EMOJI
-            emoji_size = 24  # Tamaño base
+            
+            emoji_size = 24  
             
             if emoji == "🛒":
                 emoji_size = 28
@@ -217,27 +217,27 @@ class BaseSystem:
             elif emoji in ["🔧", "🏢", "🏷️", "🗂️"]:
                 emoji_size = 24
             
-            # CONTENEDOR PRINCIPAL para centrar vertical y horizontalmente
-            center_container = tk.Frame(btn_frame, bg=bg_color)
-            center_container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  # ¡Centrado perfecto!
             
-            # Emoji con fuente ajustada - CENTRADO
+            center_container = tk.Frame(btn_frame, bg=bg_color)
+            center_container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  
+            
+            
             emoji_label = tk.Label(center_container,
                                 text=emoji,
                                 font=("Segoe UI Emoji", emoji_size),
                                 bg=bg_color,
                                 fg=styles.COLOR_BLANCO)
-            emoji_label.pack(pady=(0, 2))  # Solo padding abajo de 2px
+            emoji_label.pack(pady=(0, 2))  
             
-            # Texto con fuente normal - CENTRADO
+            
             text_label = tk.Label(center_container,
                                 text=text,
                                 font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
                                 bg=bg_color,
                                 fg=styles.COLOR_BLANCO)
-            text_label.pack()  # Sin padding extra
+            text_label.pack() 
             
-            # Hacer frame clickeable
+            
             def on_click(e=None):
                 command()
             
@@ -246,13 +246,13 @@ class BaseSystem:
             emoji_label.bind("<Button-1>", on_click)
             text_label.bind("<Button-1>", on_click)
             
-            # Cambiar cursor al pasar sobre el frame
+           
             btn_frame.bind("<Enter>", lambda e: btn_frame.config(cursor="hand2"))
             btn_frame.bind("<Leave>", lambda e: btn_frame.config(cursor=""))
             
             return btn_frame
         
-        # Crear botones con contenido centrado
+        
         btn1 = create_button_with_large_emoji(
             self.inner_frame, 
             producto_emoji, 
@@ -296,11 +296,11 @@ class BaseSystem:
 
     def create_alarm_panel(self):
         """Crea panel de alarmas MEJORADO (común para ambos sistemas)"""
-        # Frame para sección de alarmas
+        
         alarm_section = tk.Frame(self.main_frame, bg=styles.COLOR_FONDO)
         alarm_section.pack(fill=tk.X, pady=(0, 0), padx=25)
         
-        # TÍTULO CON BORDE MEJORADO
+        
         title_container = tk.Frame(alarm_section, bg=styles.COLOR_FONDO)
         title_container.pack(fill=tk.X, padx=25, pady=(0, 15))
         
@@ -313,7 +313,7 @@ class BaseSystem:
                               anchor="w")
         alarm_title.pack(side=tk.TOP, fill=tk.X)
         
-        # Línea decorativa doble
+        
         line_frame = tk.Frame(title_container, bg=styles.COLOR_FONDO, height=3)
         line_frame.pack(side=tk.TOP, fill=tk.X, pady=(5, 0))
         
@@ -323,37 +323,37 @@ class BaseSystem:
         accent_line = tk.Frame(line_frame, bg=styles.COLOR_BOTON_1, height=3)
         accent_line.place(x=0, y=0, width=120, height=3)
         
-        # CONTENEDOR DE ALARMAS CON FONDO
+       
         alarm_container = tk.Frame(alarm_section,
                                   bg=styles.COLOR_ALARMA_FONDO,
                                   relief=tk.FLAT,
                                   bd=0)
         alarm_container.pack(fill=tk.X,padx=25, pady=(0, 15))
         
-        # Borde lateral izquierdo (color del sistema)
+        
         left_border = tk.Frame(alarm_container, bg=self.system_color, width=5)
         left_border.pack(side=tk.LEFT, fill=tk.Y)
         
-        # Contenido interno
+        
         inner_content = tk.Frame(alarm_container, bg=styles.COLOR_ALARMA_FONDO)
         inner_content.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        # Grid: Información a la izquierda, botones a la derecha
+        
         inner_content.grid_columnconfigure(0, weight=2)
         inner_content.grid_columnconfigure(1, weight=1)
         
-        # COLUMNA IZQUIERDA: Información de alarmas
+       
         info_frame = tk.Frame(inner_content, bg=styles.COLOR_ALARMA_FONDO)
         info_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 20))
         
-        # Card 1: Items agotados
+       
         card1 = tk.Frame(info_frame, bg=styles.COLOR_ALARMA_CARD, relief=tk.FLAT)
         card1.pack(fill=tk.X, pady=(0, 12))
         
         card1_inner = tk.Frame(card1, bg=styles.COLOR_ALARMA_CARD)
         card1_inner.pack(fill=tk.X, padx=15, pady=10)
         
-        # Badge circular
+        
         self.badge_agotados = tk.Label(card1_inner,
                                       text="0",
                                       font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_NORMAL, styles.PESO_NEGRITA),
@@ -372,7 +372,7 @@ class BaseSystem:
                                     anchor="w")
         self.lbl_agotados.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
-        # Card 2: Items a reponer
+        
         card2 = tk.Frame(info_frame, bg=styles.COLOR_ALARMA_CARD, relief=tk.FLAT)
         card2.pack(fill=tk.X)
         
@@ -397,7 +397,7 @@ class BaseSystem:
                                    anchor="w")
         self.lbl_reponer.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
-        # COLUMNA DERECHA: Botones de acción
+        
         actions_frame = tk.Frame(inner_content, bg=styles.COLOR_ALARMA_FONDO)
         actions_frame.grid(row=0, column=1, sticky="nsew")
         
@@ -430,8 +430,7 @@ class BaseSystem:
                               activeforeground=styles.COLOR_BLANCO)
         btn_update.pack(fill=tk.X, ipady=8)
         
-        # BOTÓN VOLVER (separado)
-        # BOTÓN VOLVER MEJORADO (borde del sistema, fondo morado oscuro)
+        
         btn_volver = tk.Button(alarm_section,
                             text="Volver al Menú",
                             font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_PEQUENO, styles.PESO_NEGRITA),
@@ -467,7 +466,7 @@ class BaseSystem:
                 elif a['estado'] == 'A REPONER':
                     reponer += 1
             
-            # Actualizar badges
+            
             self.badge_agotados.config(text=str(agotados))
             self.badge_reponer.config(text=str(reponer))
             
@@ -478,7 +477,7 @@ class BaseSystem:
             self.badge_agotados.config(text="!")
             self.badge_reponer.config(text="!")
     
-    # MÉTODOS QUE DEBEN SER SOBRESCRITOS POR SUBCLASES
+   
     def get_alarmas(self):
         """Obtiene alarmas desde la BD - DEBE SER SOBRESCRITO"""
         return None

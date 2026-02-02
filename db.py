@@ -58,7 +58,91 @@ class Database:
             return False, error_msg
     
     # ============================================
-    # MÉTODOS CRUD PARA MARCA
+    # MÉTODOS DE VALIDACIÓN DE UNICIDAD
+    # ============================================
+    
+    def check_duplicate_marca(self, nombre_marca, exclude_id=None):
+        """Verifica si ya existe una marca con el mismo nombre"""
+        try:
+            if exclude_id:
+                query = "SELECT COUNT(*) FROM marca WHERE LOWER(nombre_marca) = LOWER(%s) AND id_marca != %s"
+                params = (nombre_marca, exclude_id)
+            else:
+                query = "SELECT COUNT(*) FROM marca WHERE LOWER(nombre_marca) = LOWER(%s)"
+                params = (nombre_marca,)
+            
+            result = self.execute_query(query, params, fetch=True)
+            return result[0]['count'] > 0 if result else False
+        except Exception as e:
+            print(f"Error verificando duplicado de marca: {e}")
+            return False
+    
+    def check_duplicate_categoria(self, nombre_categoria, exclude_id=None):
+        """Verifica si ya existe una categoría con el mismo nombre"""
+        try:
+            if exclude_id:
+                query = "SELECT COUNT(*) FROM categoria WHERE LOWER(nombre_categoria) = LOWER(%s) AND id_categoria != %s"
+                params = (nombre_categoria, exclude_id)
+            else:
+                query = "SELECT COUNT(*) FROM categoria WHERE LOWER(nombre_categoria) = LOWER(%s)"
+                params = (nombre_categoria,)
+            
+            result = self.execute_query(query, params, fetch=True)
+            return result[0]['count'] > 0 if result else False
+        except Exception as e:
+            print(f"Error verificando duplicado de categoría: {e}")
+            return False
+    
+    def check_duplicate_edificio(self, nombre_edificio, exclude_id=None):
+        """Verifica si ya existe un edificio con el mismo nombre"""
+        try:
+            if exclude_id:
+                query = "SELECT COUNT(*) FROM edificio WHERE LOWER(nombre_edificio) = LOWER(%s) AND id_edificio != %s"
+                params = (nombre_edificio, exclude_id)
+            else:
+                query = "SELECT COUNT(*) FROM edificio WHERE LOWER(nombre_edificio) = LOWER(%s)"
+                params = (nombre_edificio,)
+            
+            result = self.execute_query(query, params, fetch=True)
+            return result[0]['count'] > 0 if result else False
+        except Exception as e:
+            print(f"Error verificando duplicado de edificio: {e}")
+            return False
+    
+    def check_duplicate_producto_tienda(self, nombre_producto, exclude_id=None):
+        """Verifica si ya existe un producto TIENDA con el mismo nombre"""
+        try:
+            if exclude_id:
+                query = "SELECT COUNT(*) FROM ProductsTienda WHERE LOWER(nombre_producto_tienda) = LOWER(%s) AND id_productostienda != %s"
+                params = (nombre_producto, exclude_id)
+            else:
+                query = "SELECT COUNT(*) FROM ProductsTienda WHERE LOWER(nombre_producto_tienda) = LOWER(%s)"
+                params = (nombre_producto,)
+            
+            result = self.execute_query(query, params, fetch=True)
+            return result[0]['count'] > 0 if result else False
+        except Exception as e:
+            print(f"Error verificando duplicado de producto tienda: {e}")
+            return False
+    
+    def check_duplicate_producto_rape(self, nombre_producto, exclude_id=None):
+        """Verifica si ya existe un producto RA-PE con el mismo nombre"""
+        try:
+            if exclude_id:
+                query = "SELECT COUNT(*) FROM ProductsRaPe WHERE LOWER(nombre_producto_rape) = LOWER(%s) AND id_productosrape != %s"
+                params = (nombre_producto, exclude_id)
+            else:
+                query = "SELECT COUNT(*) FROM ProductsRaPe WHERE LOWER(nombre_producto_rape) = LOWER(%s)"
+                params = (nombre_producto,)
+            
+            result = self.execute_query(query, params, fetch=True)
+            return result[0]['count'] > 0 if result else False
+        except Exception as e:
+            print(f"Error verificando duplicado de producto RA-PE: {e}")
+            return False
+    
+    # ============================================
+    # MÉTODOS CRUD PARA MARCA (CON VALIDACIÓN)
     # ============================================
     
     def get_all_marcas(self):
@@ -73,16 +157,24 @@ class Database:
         return result[0] if result else None
     
     def create_marca(self, nombre_marca):
-        """Crear nueva marca"""
+        """Crear nueva marca con validación de unicidad"""
+        # Validar que no exista
+        if self.check_duplicate_marca(nombre_marca):
+            return None, f"Ya existe una marca con el nombre '{nombre_marca}'"
+        
         query = "INSERT INTO marca (nombre_marca) VALUES (%s) RETURNING id_marca"
         result = self.execute_query(query, (nombre_marca,), fetch=True)
-        return result[0]['id_marca'] if result else None
+        return (result[0]['id_marca'], "Marca creada exitosamente") if result else (None, "Error creando marca")
     
     def update_marca(self, id_marca, nombre_marca):
-        """Actualizar marca existente"""
+        """Actualizar marca existente con validación de unicidad"""
+        # Validar que no exista otro con el mismo nombre
+        if self.check_duplicate_marca(nombre_marca, id_marca):
+            return False, f"Ya existe otra marca con el nombre '{nombre_marca}'"
+        
         query = "UPDATE marca SET nombre_marca = %s WHERE id_marca = %s"
         affected = self.execute_query(query, (nombre_marca, id_marca))
-        return affected > 0
+        return (affected > 0, "Marca actualizada exitosamente") if affected > 0 else (False, "Error actualizando marca")
     
     def delete_marca(self, id_marca):
         """Eliminar marca si no tiene productos asociados"""
@@ -108,7 +200,7 @@ class Database:
         return False, "Error eliminando marca"
     
     # ============================================
-    # MÉTODOS CRUD PARA CATEGORÍA
+    # MÉTODOS CRUD PARA CATEGORÍA (CON VALIDACIÓN)
     # ============================================
     
     def get_all_categorias(self):
@@ -123,18 +215,26 @@ class Database:
         return result[0] if result else None
     
     def create_categoria(self, nombre_categoria):
-        """Crear nueva categoría"""
+        """Crear nueva categoría con validación de unicidad"""
+        # Validar que no exista
+        if self.check_duplicate_categoria(nombre_categoria):
+            return None, f"Ya existe una categoría con el nombre '{nombre_categoria}'"
+        
         query = "INSERT INTO categoria (nombre_categoria) VALUES (%s) RETURNING id_categoria"
         result = self.execute_query(query, (nombre_categoria,), fetch=True)
         if result and len(result) > 0:
-            return result[0]['id_categoria']
-        return None
+            return result[0]['id_categoria'], "Categoría creada exitosamente"
+        return None, "Error creando categoría"
     
     def update_categoria(self, id_categoria, nombre_categoria):
-        """Actualizar categoría existente"""
+        """Actualizar categoría existente con validación de unicidad"""
+        # Validar que no exista otro con el mismo nombre
+        if self.check_duplicate_categoria(nombre_categoria, id_categoria):
+            return False, f"Ya existe otra categoría con el nombre '{nombre_categoria}'"
+        
         query = "UPDATE categoria SET nombre_categoria = %s WHERE id_categoria = %s"
         affected = self.execute_query(query, (nombre_categoria, id_categoria))
-        return affected > 0
+        return (affected > 0, "Categoría actualizada exitosamente") if affected > 0 else (False, "Error actualizando categoría")
     
     def delete_categoria(self, id_categoria):
         """Eliminar categoría si no tiene productos asociados"""
@@ -160,7 +260,7 @@ class Database:
         return False, "Error eliminando categoría"
     
     # ============================================
-    # MÉTODOS CRUD PARA EDIFICIO
+    # MÉTODOS CRUD PARA EDIFICIO (CON VALIDACIÓN)
     # ============================================
     
     def get_all_edificios(self):
@@ -180,25 +280,33 @@ class Database:
         return self.execute_query(query, fetch=True)
 
     def create_edificio(self, nombre_edificio, direccion, tipo, id_inventario):
-        """Crear nuevo edificio"""
+        """Crear nuevo edificio con validación de unicidad"""
+        # Validar que no exista
+        if self.check_duplicate_edificio(nombre_edificio):
+            return None, f"Ya existe un edificio con el nombre '{nombre_edificio}'"
+        
         query = """
         INSERT INTO edificio (nombre_edificio, direccion, tipo, id_inventario) 
         VALUES (%s, %s, %s, %s) RETURNING id_edificio
         """
         result = self.execute_query(query, (nombre_edificio, direccion, tipo, id_inventario), fetch=True)
         if result and len(result) > 0:
-            return result[0]['id_edificio']
-        return None
+            return result[0]['id_edificio'], "Edificio creado exitosamente"
+        return None, "Error creando edificio"
 
     def update_edificio(self, id_edificio, nombre_edificio, direccion, tipo, id_inventario):
-        """Actualizar edificio existente"""
+        """Actualizar edificio existente con validación de unicidad"""
+        # Validar que no exista otro con el mismo nombre
+        if self.check_duplicate_edificio(nombre_edificio, id_edificio):
+            return False, f"Ya existe otro edificio con el nombre '{nombre_edificio}'"
+        
         query = """
         UPDATE edificio 
         SET nombre_edificio = %s, direccion = %s, tipo = %s, id_inventario = %s 
         WHERE id_edificio = %s
         """
         affected = self.execute_query(query, (nombre_edificio, direccion, tipo, id_inventario, id_edificio))
-        return affected > 0
+        return (affected > 0, "Edificio actualizado exitosamente") if affected > 0 else (False, "Error actualizando edificio")
 
     def delete_edificio(self, id_edificio):
         """Eliminar edificio si no tiene inventario asociado"""
@@ -265,12 +373,16 @@ class Database:
         return self.execute_query(query, (id_producto,), fetch=True)
 
     # ============================================
-    # CRUD PARA PRODUCTS TIENDA
+    # CRUD PARA PRODUCTS TIENDA (CON VALIDACIÓN)
     # ============================================
 
     def create_producto_tienda(self, nombre, id_marca, id_categoria, precio_venta, 
                             precio_compra=None, color=None, talla=None, alarma_cap=5):
-        """Crear nuevo producto en TIENDA"""
+        """Crear nuevo producto en TIENDA con validación de unicidad"""
+        # Validar que no exista
+        if self.check_duplicate_producto_tienda(nombre):
+            return None, f"Ya existe un producto TIENDA con el nombre '{nombre}'"
+        
         query = """
         INSERT INTO ProductsTienda 
         (nombre_producto_tienda, id_marca, id_categoria, precio_venta, precio_compra, color, talla, alarma_cap) 
@@ -280,12 +392,16 @@ class Database:
         result = self.execute_query(query, (nombre, id_marca, id_categoria, precio_venta, 
                                         precio_compra, color, talla, alarma_cap), fetch=True)
         if result and len(result) > 0:
-            return result[0]['id_productostienda']
-        return None
+            return result[0]['id_productostienda'], "Producto creado exitosamente"
+        return None, "Error creando producto"
 
     def update_producto_tienda(self, id_producto, nombre, id_marca, id_categoria, precio_venta,
                             precio_compra=None, color=None, talla=None, alarma_cap=None):
-        """Actualizar producto TIENDA existente"""
+        """Actualizar producto TIENDA existente con validación de unicidad"""
+        # Validar que no exista otro con el mismo nombre
+        if self.check_duplicate_producto_tienda(nombre, id_producto):
+            return False, f"Ya existe otro producto TIENDA con el nombre '{nombre}'"
+        
         query = """
         UPDATE ProductsTienda 
         SET nombre_producto_tienda = %s, 
@@ -300,7 +416,7 @@ class Database:
         """
         affected = self.execute_query(query, (nombre, id_marca, id_categoria, precio_venta,
                                             precio_compra, color, talla, alarma_cap, id_producto))
-        return affected > 0
+        return (affected > 0, "Producto actualizado exitosamente") if affected > 0 else (False, "Error actualizando producto")
 
     def delete_producto_tienda(self, id_producto):
         """Eliminar producto TIENDA y su inventario asociado"""
@@ -393,7 +509,11 @@ class Database:
         return self.execute_query(query, fetch=True)
 
     def create_producto_rape(self, nombre, id_marca, id_categoria, alarma_cap=5):
-        """Crear nuevo producto en RA-PE"""
+        """Crear nuevo producto en RA-PE con validación de unicidad"""
+        # Validar que no exista
+        if self.check_duplicate_producto_rape(nombre):
+            return None, f"Ya existe un material RA-PE con el nombre '{nombre}'"
+        
         query = """
         INSERT INTO ProductsRaPe 
         (nombre_producto_rape, id_marca, id_categoria, alarma_cap) 
@@ -401,10 +521,14 @@ class Database:
         RETURNING id_productosrape
         """
         result = self.execute_query(query, (nombre, id_marca, id_categoria, alarma_cap), fetch=True)
-        return result[0]['id_productosrape'] if result else None
+        return (result[0]['id_productosrape'], "Material creado exitosamente") if result else (None, "Error creando material")
 
     def update_producto_rape(self, id_producto, nombre, id_marca, id_categoria, alarma_cap=None):
-        """Actualizar producto RA-PE existente"""
+        """Actualizar producto RA-PE existente con validación de unicidad"""
+        # Validar que no exista otro con el mismo nombre
+        if self.check_duplicate_producto_rape(nombre, id_producto):
+            return False, f"Ya existe otro material RA-PE con el nombre '{nombre}'"
+        
         query = """
         UPDATE ProductsRaPe 
         SET nombre_producto_rape = %s, 
@@ -414,7 +538,7 @@ class Database:
         WHERE id_productosrape = %s
         """
         affected = self.execute_query(query, (nombre, id_marca, id_categoria, alarma_cap, id_producto))
-        return affected > 0
+        return (affected > 0, "Material actualizado exitosamente") if affected > 0 else (False, "Error actualizando material")
 
     def delete_producto_rape(self, id_producto):
         """Eliminar producto RA-PE y su inventario asociado"""
@@ -426,10 +550,10 @@ class Database:
             affected = self.execute_query(delete_producto_query, (id_producto,), fetch=False)
             
             if affected:
-                return True, "Producto y su inventario eliminados exitosamente"
-            return False, "Error eliminando producto"
+                return True, "Material y su inventario eliminados exitosamente"
+            return False, "Error eliminando material"
         except Exception as e:
-            return False, f"Error al eliminar producto: {e}"
+            return False, f"Error al eliminar material: {e}"
 
     def get_inventario_por_producto_rape(self, id_producto):
         """Obtener todo el inventario de un producto RA-PE específico (ACTUALIZADO)"""
@@ -637,7 +761,6 @@ class Database:
             print(f"Error obteniendo datos para exportación TIENDA: {e}")
             return {'resumen': [], 'detalle': []}
         
-        
     def get_export_data_rape(self):
         """Obtiene todos los datos necesarios para exportar RA-PE a Excel"""
         try:
@@ -685,7 +808,6 @@ class Database:
         except Exception as e:
             print(f"Error obteniendo datos para exportación RA-PE: {e}")
             return {'resumen': [], 'detalle': []}
-        
     
     def buscar_productos_tienda(self, texto):
         """Búsqueda optimizada de productos TIENDA"""
@@ -723,6 +845,7 @@ class Database:
         except Exception as e:
             print(f"Error verificando login: {e}")
             return None
+    
     # MÉTODO PRINCIPAL PARA EJECUTAR CONSULTAS
     # ============================================
     
