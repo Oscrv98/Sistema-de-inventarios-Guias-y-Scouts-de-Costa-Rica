@@ -3,7 +3,7 @@ from tkinter import messagebox
 import os
 import sys
 import styles
-from tiendaDef import TiendaSystem
+# from tiendaDef import TiendaSystem  # COMENTADO: Sistema Tienda ocultado temporalmente
 from rapeDef import RAPESystem
 from db import Database
 from PIL import Image, ImageTk 
@@ -272,7 +272,7 @@ class MainApp:
         self.root.geometry(f"{width}x{height}+{x}+{y}")
     
     def show_system_selection(self):
-        """Muestra pantalla de selección de sistema con diseño moderno"""
+        """Muestra pantalla de selección de sistema - SOLO RA-PE (Tienda ocultado temporalmente)"""
         self.clear_window()
         
         self.main_frame = tk.Frame(self.root, 
@@ -296,7 +296,7 @@ class MainApp:
         title_container.pack(fill=tk.X, pady=(0, 40))  # Más espacio debajo
         
         main_title = tk.Label(title_container,
-                             text="SELECCIÓN DEL SISTEMA",
+                             text="SISTEMA DE INVENTARIO",  # Cambiado de "SELECCIÓN DEL SISTEMA"
                              font=(styles.FUENTE_PRINCIPAL, styles.TAMANO_ENCABEZADO, styles.PESO_NEGRITA),
                              bg=styles.COLOR_FONDO,
                              fg=styles.COLOR_FONDO_OSCURO,  # Morado igual que fondo
@@ -316,9 +316,11 @@ class MainApp:
         buttons_container.pack(fill=tk.BOTH, expand=True)
         
         buttons_container.grid_columnconfigure(0, weight=1)
-        buttons_container.grid_columnconfigure(1, weight=1)
+        # buttons_container.grid_columnconfigure(1, weight=1)  # COMENTADO: Segunda columna para Tienda
         buttons_container.grid_rowconfigure(0, weight=1)
         
+        # COMENTADO: Frame de Tienda ocultado temporalmente
+        """
         tienda_frame = tk.Frame(buttons_container, 
                                bg=styles.COLOR_TIENDA,
                                relief=tk.FLAT)
@@ -364,11 +366,13 @@ class MainApp:
         tienda_frame.bind("<Button-1>", lambda e: self.open_tienda_login())
         for widget in tienda_frame.winfo_children():
             widget.bind("<Button-1>", lambda e: self.open_tienda_login())
+        """
         
+        # Frame de RA-PE (ahora ocupa toda la ventana)
         rape_frame = tk.Frame(buttons_container,
                              bg=styles.COLOR_RAPE,
                              relief=tk.FLAT)
-        rape_frame.grid(row=0, column=1, padx=(15, 0), sticky="nsew")
+        rape_frame.grid(row=0, column=0, padx=0, sticky="nsew")  # Cambiado a column=0 y padx=0
         
         rape_content = tk.Frame(rape_frame, bg=styles.COLOR_RAPE)
         rape_content.pack(fill=tk.BOTH, expand=True, padx=30, pady=40)
@@ -502,9 +506,12 @@ class MainApp:
                              fg=styles.COLOR_TEXTO_CLARO)
         info_label.pack(side=tk.RIGHT, padx=(0, 10), pady=5)
     
+    # COMENTADO: Método de login para Tienda
+    """
     def open_tienda_login(self):
-        """Muestra ventana de login para TIENDA"""
+        #Muestra ventana de login para TIENDA
         self.show_login_window("TIENDA", self.open_tienda_system)
+    """
     
     def open_rape_login(self):
         """Muestra ventana de login para RA-PE"""
@@ -533,7 +540,8 @@ class MainApp:
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Título
-        color_sistema = styles.COLOR_TIENDA if sistema == "TIENDA" else styles.COLOR_RAPE
+        # color_sistema = styles.COLOR_TIENDA if sistema == "TIENDA" else styles.COLOR_RAPE
+        color_sistema = styles.COLOR_RAPE  # Solo RA-PE ahora
         tk.Label(main_frame,
                 text=f"ACCESO SISTEMA",
                 font=(styles.FUENTE_PRINCIPAL, 18, styles.PESO_NEGRITA),
@@ -631,11 +639,14 @@ class MainApp:
         # Esperar a que se cierre la ventana
         self.root.wait_window(login_window)
     
+    # COMENTADO: Método para abrir sistema Tienda
+    """
     def open_tienda_system(self):
-        """Abre el sistema de Tienda después de login exitoso"""
+        #Abre el sistema de Tienda después de login exitoso
         print("Acceso concedido - Abriendo Sistema Tienda...")
         self.clear_window()
         TiendaSystem(self.root, self.show_system_selection, self.db_status)
+    """
     
     def open_rape_system(self):
         """Abre el sistema de RA-PE después de login exitoso"""
